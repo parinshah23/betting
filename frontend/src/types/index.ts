@@ -1,0 +1,143 @@
+/**
+ * Shared TypeScript Types
+ *
+ * Core types used throughout the application.
+ */
+
+// User Types
+export interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  role: 'user' | 'admin';
+  emailVerified: boolean;
+  createdAt: string;
+}
+
+// Competition Types
+export interface Competition {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  shortDescription: string;
+  prizeValue: number;
+  ticketPrice: number;
+  totalTickets: number;
+  soldTickets: number;
+  maxTicketsPerUser: number;
+  category: string;
+  status: 'draft' | 'live' | 'ended' | 'completed' | 'cancelled';
+  featured: boolean;
+  endDate: string;
+  drawDate: string | null;
+  skillQuestion: string;
+  images: CompetitionImage[];
+  winner?: {
+    displayName: string;
+    ticketNumber: number;
+  };
+}
+
+export interface CompetitionImage {
+  id: string;
+  url: string;
+  altText: string;
+  isPrimary: boolean;
+}
+
+// Ticket Types
+export interface Ticket {
+  id: string;
+  competitionId: string;
+  userId: string;
+  ticketNumber: number;
+  isInstantWin: boolean;
+  instantWinPrize?: string;
+  purchasedAt: string;
+}
+
+// Order Types
+export interface Order {
+  id: string;
+  orderNumber: string;
+  status: 'pending' | 'paid' | 'failed' | 'refunded' | 'cancelled';
+  subtotal: number;
+  discountAmount: number;
+  walletAmountUsed: number;
+  totalAmount: number;
+  createdAt: string;
+  items: OrderItem[];
+}
+
+export interface OrderItem {
+  competitionId: string;
+  competitionTitle: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+// Wallet Types
+export interface Wallet {
+  id: string;
+  balance: number;
+}
+
+export interface WalletTransaction {
+  id: string;
+  type: 'deposit' | 'spend' | 'cashback' | 'refund' | 'admin_credit' | 'admin_debit';
+  amount: number;
+  balanceAfter: number;
+  description: string;
+  createdAt: string;
+}
+
+// Cart Types
+export interface CartItem {
+  id: string;
+  competitionId: string;
+  competitionTitle: string;
+  competitionSlug: string;
+  competitionImage: string;
+  ticketPrice: number;
+  quantity: number;
+  subtotal: number;
+}
+
+export interface Cart {
+  id: string;
+  items: CartItem[];
+  subtotal: number;
+  discountAmount: number;
+  total: number;
+  promoCode?: {
+    code: string;
+    discountType: 'percentage' | 'fixed';
+    discountValue: number;
+  };
+}
+
+// API Response Types
+export interface ApiSuccessResponse<T> {
+  success: true;
+  data: T;
+  meta?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+  };
+}
+
+export interface ApiErrorResponse {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+    details?: Record<string, string[]>;
+  };
+}
+
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
