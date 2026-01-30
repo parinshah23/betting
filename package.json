@@ -1,0 +1,22 @@
+{
+  "name": "compi-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Competition & Raffle Platform - Monorepo",
+  "scripts": {
+    "tasks": "./scripts/show-tasks.sh",
+    "tasks:phase1": "./scripts/show-tasks.sh --phase=1",
+    "tasks:phase2": "./scripts/show-tasks.sh --phase=2",
+    "tasks:phase3": "./scripts/show-tasks.sh --phase=3",
+    "tasks:pending": "./scripts/show-tasks.sh --pending",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}

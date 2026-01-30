@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/Users/shroffyaksi/Desktop/compi-web/scripts/show-tasks.sh:*)"
+    ]
+  }
+}
