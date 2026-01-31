@@ -7,17 +7,31 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 
-interface AppError extends Error {
-  statusCode?: number;
-  code?: string;
+// Custom error class
+export class AppError extends Error {
+  statusCode: number;
+  code: string;
   details?: Record<string, string[]>;
+
+  constructor(
+    message: string,
+    statusCode: number = 500,
+    code: string = 'ERROR',
+    details?: Record<string, string[]>
+  ) {
+    super(message);
+    this.statusCode = statusCode;
+    this.code = code;
+    this.details = details;
+    Error.captureStackTrace(this, this.constructor);
+  }
 }
 
 export const errorHandler = (
-  err: AppError,
+  err: any,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   console.error('Error:', err);
 
@@ -54,26 +68,6 @@ export const errorHandler = (
     },
   });
 };
-
-// Custom error class
-export class AppError extends Error {
-  statusCode: number;
-  code: string;
-  details?: Record<string, string[]>;
-
-  constructor(
-    message: string,
-    statusCode: number = 500,
-    code: string = 'ERROR',
-    details?: Record<string, string[]>
-  ) {
-    super(message);
-    this.statusCode = statusCode;
-    this.code = code;
-    this.details = details;
-    Error.captureStackTrace(this, this.constructor);
-  }
-}
 
 // Common error factories
 export const NotFoundError = (message: string = 'Resource not found') =>

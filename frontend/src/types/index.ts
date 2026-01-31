@@ -22,22 +22,31 @@ export interface Competition {
   title: string;
   slug: string;
   description: string;
-  shortDescription: string;
-  prizeValue: number;
-  ticketPrice: number;
-  totalTickets: number;
-  soldTickets: number;
-  maxTicketsPerUser: number;
-  category: string;
+  short_description?: string;
+  shortDescription?: string;
+  prize_value?: number | string;
+  prizeValue?: number | string;
+  ticket_price?: number | string;
+  ticketPrice?: number | string;
+  total_tickets?: number;
+  totalTickets?: number;
+  sold_tickets?: number;
+  soldTickets?: number;
+  max_tickets_per_user?: number;
+  maxTicketsPerUser?: number;
+  category?: string | null;
   status: 'draft' | 'live' | 'ended' | 'completed' | 'cancelled';
-  featured: boolean;
-  endDate: string;
-  drawDate: string | null;
-  skillQuestion: string;
-  images: CompetitionImage[];
+  featured?: boolean;
+  end_date?: string;
+  endDate?: string;
+  draw_date?: string | null;
+  drawDate?: string | null;
+  skill_question?: string;
+  skillQuestion?: string;
+  images?: CompetitionImage[];
   winner?: {
-    displayName: string;
-    ticketNumber: number;
+    displayName?: string;
+    ticketNumber?: number;
   };
 }
 
@@ -104,7 +113,10 @@ export interface CartItem {
   competitionImage: string;
   ticketPrice: number;
   quantity: number;
+  maxQuantity: number;
   subtotal: number;
+  competitionEndDate: string;
+  competitionStatus: 'live' | 'ended' | 'sold_out';
 }
 
 export interface Cart {
@@ -117,6 +129,7 @@ export interface Cart {
     code: string;
     discountType: 'percentage' | 'fixed';
     discountValue: number;
+    savings: number;
   };
 }
 

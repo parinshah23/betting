@@ -1,6 +1,7 @@
 # Human Developer Task List
 
 > **Purpose:** This document tracks all tasks requiring human developer action for the Raffle Competition Platform.
+> **Tech Stack:** Node.js (Backend) + React (Frontend) + PostgreSQL
 > **Auto-display:** Run `npm run tasks` or `./scripts/show-tasks.sh` to see pending tasks in terminal.
 
 ---
@@ -10,8 +11,8 @@
 | Phase | Name | Status | Progress |
 |-------|------|--------|----------|
 | Phase 0 | Planning & Documentation | COMPLETE | 100% |
-| Phase 1 | Database & Schemas | NOT STARTED | 0% |
-| Phase 2 | Backend API & Auth | NOT STARTED | 0% |
+| Phase 1 | Database & Schemas | COMPLETE | 100% |
+| Phase 2 | Backend API & Auth | IN PROGRESS | 5% |
 | Phase 3 | Frontend Skeleton | NOT STARTED | 0% |
 | Phase 4 | Page Implementation | NOT STARTED | 0% |
 | Phase 5 | Testing & Polish | NOT STARTED | 0% |
@@ -20,12 +21,23 @@
 
 ## Pre-Implementation Setup (HUMAN REQUIRED)
 
-These tasks must be completed before starting any development:
+### 1. Installation Commands
+Run these commands to ensure your environment is ready:
+```bash
+# Install Node.js Dependencies (Backend)
+cd backend && npm install
 
-### Environment Setup
+# Install Node.js Dependencies (Frontend)
+cd ../frontend && npm install
+
+# Install Global Utilities (if not already present)
+npm install -g ts-node typescript
+```
+
+### 2. Environment Setup
 - [ ] **TASK-001:** Install PostgreSQL 12+ locally
 - [ ] **TASK-002:** Create PostgreSQL database: `raffle_db`
-- [ ] **TASK-003:** Create database user: `raffle_user` with password
+- [ ] **TASK-003:** Create database user: `raffle_user` with password `password`
 - [ ] **TASK-004:** Install Node.js 18+ (LTS recommended)
 - [ ] **TASK-005:** Install pnpm or npm globally
 
@@ -246,7 +258,7 @@ Create these in `frontend/src/hooks/`:
 - [ ] **TASK-405:** Checkout Page (`docs/pages/05-checkout.md`)
 - [ ] **TASK-406:** Login Page (`docs/pages/06-login.md`)
 - [ ] **TASK-407:** Register Page (`docs/pages/07-register.md`)
-- [ ] **TASK-408:** User Dashboard (`docs/pages/09-user-dashboard.md`)
+- [x] **TASK-408:** User Dashboard (`docs/pages/09-user-dashboard.md`) (DONE - 2026-01-31)
 - [ ] **TASK-409:** Wallet Page (`docs/pages/11-wallet.md`)
 - [ ] **TASK-410:** My Tickets Page (`docs/pages/12-my-tickets.md`)
 - [ ] **TASK-411:** Admin Dashboard (`docs/pages/15-admin-dashboard.md`)
