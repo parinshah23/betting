@@ -1,162 +1,61 @@
 /**
  * Cart Service
  * 
- * Manages user shopping carts. In production, this should use Redis.
- * For now, we use an in-memory Map (data is lost on server restart).
+ * Manages user shopping carts using PostgreSQL database.
+ * Previously used in-memory Map (data was lost on restart).
  */
 
-export interface CartItem {
-  competition_id: string;
-  quantity: number;
-  unit_price: number;
-  competition_title: string;
-  competition_slug: string;
-  competition_image?: string;
-}
+import { cartModel, Cart, CartItem } from '../models/cart.model';
 
-export interface Cart {
-  user_id: string;
-  items: CartItem[];
-  promo_code?: string;
-  discount_amount: number;
-  subtotal: number;
-  total: number;
-  updated_at: Date;
-}
-
-// In-memory cart storage (use Redis in production)
-const carts = new Map<string, Cart>();
+export { Cart, CartItem };
 
 export const cartService = {
   /**
    * Get or create a cart for a user
    */
-  getCart(userId: string): Cart {
-    if (!carts.has(userId)) {
-      carts.set(userId, {
-        user_id: userId,
-        items: [],
-        discount_amount: 0,
-        subtotal: 0,
-        total: 0,
-        updated_at: new Date(),
-      });
-    }
-    return carts.get(userId)!;
+  async getCart(userId: string): Promise<Cart> {
+    return cartModel.getOrCreateCart(userId);
   },
 
   /**
    * Add item to cart
    */
-  addItem(userId: string, item: CartItem): Cart {
-    const cart = this.getCart(userId);
-    
-    // Check if item already exists
-    const existingItemIndex = cart.items.findIndex(
-      i => i.competition_id === item.competition_id
-    );
-
-    if (existingItemIndex >= 0) {
-      // Update quantity
-      cart.items[existingItemIndex].quantity += item.quantity;
-    } else {
-      // Add new item
-      cart.items.push(item);
-    }
-
-    this.recalculateCart(cart);
-    return cart;
+  async addItem(userId: string, item: CartItem): Promise<Cart> {
+    return cartModel.addItem(userId, item);
   },
 
   /**
    * Update item quantity in cart
    */
-  updateItem(userId: string, competitionId: string, quantity: number): Cart {
-    const cart = this.getCart(userId);
-    
-    const itemIndex = cart.items.findIndex(
-      i => i.competition_id === competitionId
-    );
-
-    if (itemIndex === -1) {
-      throw new Error('Item not found in cart');
-    }
-
-    if (quantity <= 0) {
-      // Remove item if quantity is 0 or less
-      cart.items.splice(itemIndex, 1);
-    } else {
-      cart.items[itemIndex].quantity = quantity;
-    }
-
-    this.recalculateCart(cart);
-    return cart;
+  async updateItem(userId: string, competitionId: string, quantity: number): Promise<Cart> {
+    return cartModel.updateItem(userId, competitionId, quantity);
   },
 
   /**
    * Remove item from cart
    */
-  removeItem(userId: string, competitionId: string): Cart {
-    const cart = this.getCart(userId);
-    
-    const itemIndex = cart.items.findIndex(
-      i => i.competition_id === competitionId
-    );
-
-    if (itemIndex === -1) {
-      throw new Error('Item not found in cart');
-    }
-
-    cart.items.splice(itemIndex, 1);
-    this.recalculateCart(cart);
-    return cart;
+  async removeItem(userId: string, competitionId: string): Promise<Cart> {
+    return cartModel.removeItem(userId, competitionId);
   },
 
   /**
    * Clear cart
    */
-  clearCart(userId: string): void {
-    carts.delete(userId);
+  async clearCart(userId: string): Promise<void> {
+    return cartModel.clearCart(userId);
   },
 
   /**
    * Apply promo code to cart
    */
-  applyPromoCode(userId: string, promoCode: string, discountPercent: number): Cart {
-    const cart = this.getCart(userId);
-    
-    cart.promo_code = promoCode;
-    cart.discount_amount = (cart.subtotal * discountPercent) / 100;
-    cart.total = cart.subtotal - cart.discount_amount;
-    cart.updated_at = new Date();
-
-    return cart;
+  async applyPromoCode(userId: string, promoCode: string, discountPercent: number): Promise<Cart> {
+    return cartModel.applyPromoCode(userId, promoCode, discountPercent);
   },
 
   /**
    * Remove promo code from cart
    */
-  removePromoCode(userId: string): Cart {
-    const cart = this.getCart(userId);
-    
-    cart.promo_code = undefined;
-    cart.discount_amount = 0;
-    cart.total = cart.subtotal;
-    cart.updated_at = new Date();
-
-    return cart;
-  },
-
-  /**
-   * Recalculate cart totals
-   */
-  recalculateCart(cart: Cart): void {
-    cart.subtotal = cart.items.reduce(
-      (sum, item) => sum + item.unit_price * item.quantity,
-      0
-    );
-    
-    cart.total = cart.subtotal - cart.discount_amount;
-    cart.updated_at = new Date();
+  async removePromoCode(userId: string): Promise<Cart> {
+    return cartModel.removePromoCode(userId);
   },
 };

@@ -31,12 +31,12 @@ export function SkillQuestion({
     setMessage('');
 
     try {
-      const response = await api.post<VerifyAnswerResponse>('/tickets/verify-answer', {
-        competitionId,
+      const response = await api.post<VerifyAnswerResponse>('/competitions/verify-answer', {
+        competition_id: competitionId,
         answer: answer.trim()
       });
 
-      if (response.success && response.data?.correct) {
+      if (response.success && (response.data?.correct || response.data?.is_correct)) {
         setStatus('correct');
         setMessage(response.data.message || 'Correct! You can now select your tickets.');
         onVerified(answer.trim());

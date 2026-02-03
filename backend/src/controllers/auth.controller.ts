@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../services/auth.service';
+import { emailService } from '../services/email.service';
 import { sendSuccess } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { ConflictError, UnauthorizedError } from '../middleware/errorHandler';
@@ -7,6 +8,10 @@ import { ConflictError, UnauthorizedError } from '../middleware/errorHandler';
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await authService.register(req.body);
+    
+    // Send welcome email
+    await emailService.sendWelcomeEmail(user.email, user.first_name);
+    
     sendSuccess(res, { data: user, message: 'User registered successfully' }, 201);
   } catch (error) {
     if (error instanceof Error && error.message === 'Email already in use') {

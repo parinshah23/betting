@@ -4,6 +4,7 @@ export const addToCartSchema = z.object({
   body: z.object({
     competition_id: z.string().uuid('Invalid competition ID'),
     quantity: z.number().int().positive('Quantity must be at least 1'),
+    skill_answer: z.string().optional(),
   }),
 });
 

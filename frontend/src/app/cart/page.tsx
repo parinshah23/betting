@@ -44,7 +44,7 @@ export default function CartPage() {
         </div>
         <h1 className="text-2xl font-bold text-neutral-900 mb-2">Your Cart is Empty</h1>
         <p className="text-neutral-500 mb-8">
-          Looks like you haven&apos;t added any tickets yet. 
+          Looks like you haven&apos;t added any tickets yet.
           Check out our live competitions to find your next win!
         </p>
         <Button href="/competitions" size="lg" className="w-full sm:w-auto">
@@ -54,7 +54,7 @@ export default function CartPage() {
     );
   }
 
-  const hasInvalidItems = cart.items.some(item => item.competitionStatus !== 'live');
+  const hasInvalidItems = cart.items.some(item => item.competitionStatus && item.competitionStatus !== 'live');
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -80,8 +80,8 @@ export default function CartPage() {
             ))}
           </div>
 
-          <Link 
-            href="/competitions" 
+          <Link
+            href="/competitions"
             className="inline-flex items-center gap-2 text-primary-600 font-medium hover:text-primary-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -91,13 +91,13 @@ export default function CartPage() {
 
         {/* Right Column: Summary */}
         <div className="lg:col-span-4 space-y-6">
-          <PromoCodeSection 
+          <PromoCodeSection
             appliedCode={cart.promoCode}
             onApply={applyPromoCode}
             onRemove={removePromoCode}
           />
-          
-          <OrderSummary 
+
+          <OrderSummary
             subtotal={cart.subtotal}
             discount={cart.discountAmount}
             total={cart.total}

@@ -11,7 +11,7 @@ import { BadRequestError, NotFoundError } from '../middleware/errorHandler';
 export const getCart = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId } = (req as AuthenticatedRequest).user;
-    const cart = cartService.getCart(userId);
+    const cart = await cartService.getCart(userId);
 
     sendSuccess(res, {
       data: cart,
@@ -48,7 +48,7 @@ export const addToCart = async (req: Request, res: Response, next: NextFunction)
     }
 
     // Add to cart
-    const cart = cartService.addItem(userId, {
+    const cart = await cartService.addItem(userId, {
       competition_id,
       quantity,
       unit_price: competition.ticket_price,
@@ -75,7 +75,7 @@ export const updateCartItem = async (req: Request, res: Response, next: NextFunc
 
     if (quantity === 0) {
       // Remove item if quantity is 0
-      const cart = cartService.removeItem(userId, competition_id);
+      const cart = await cartService.removeItem(userId, competition_id);
       return sendSuccess(res, {
         data: cart,
         message: 'Item removed from cart',
@@ -91,7 +91,7 @@ export const updateCartItem = async (req: Request, res: Response, next: NextFunc
       }
     }
 
-    const cart = cartService.updateItem(userId, competition_id, quantity);
+    const cart = await cartService.updateItem(userId, competition_id, quantity);
 
     sendSuccess(res, {
       data: cart,
@@ -110,7 +110,7 @@ export const removeFromCart = async (req: Request, res: Response, next: NextFunc
     const { userId } = (req as AuthenticatedRequest).user;
     const { itemId } = req.params; // itemId is competition_id
 
-    const cart = cartService.removeItem(userId, itemId);
+    const cart = await cartService.removeItem(userId, itemId);
 
     sendSuccess(res, {
       data: cart,
@@ -138,16 +138,33 @@ export const applyPromoCode = async (req: Request, res: Response, next: NextFunc
     };
 
     const discountPercent = validPromoCodes[promo_code.toUpperCase()];
-    
+
     if (discountPercent === undefined) {
       throw BadRequestError('Invalid promo code');
     }
 
-    const cart = cartService.applyPromoCode(userId, promo_code.toUpperCase(), discountPercent);
+    const cart = await cartService.applyPromoCode(userId, promo_code.toUpperCase(), discountPercent);
 
     sendSuccess(res, {
       data: cart,
       message: `Promo code applied: ${discountPercent}% discount`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Remove promo code
+ */
+export const removePromoCode = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = (req as AuthenticatedRequest).user;
+    const cart = await cartService.removePromoCode(userId);
+
+    sendSuccess(res, {
+      data: cart,
+      message: 'Promo code removed',
     });
   } catch (error) {
     next(error);
@@ -160,7 +177,7 @@ export const applyPromoCode = async (req: Request, res: Response, next: NextFunc
 export const clearCart = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId } = (req as AuthenticatedRequest).user;
-    cartService.clearCart(userId);
+    await cartService.clearCart(userId);
 
     sendSuccess(res, {
       data: null,

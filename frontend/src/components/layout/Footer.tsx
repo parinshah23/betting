@@ -32,25 +32,31 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <footer className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 text-gray-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
-            <Link href="/" className="text-2xl font-bold text-white">
-              RaffleSite
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-xl">PC</span>
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="text-xl font-bold text-white">Premium</span>
+                <span className="text-sm font-semibold text-accent-400">Competitions</span>
+              </div>
             </Link>
-            <p className="mt-4 text-gray-400 max-w-md">
-              Enter our exciting online raffles and win incredible prizes! 
+            <p className="mt-6 text-gray-400 max-w-md leading-relaxed">
+              Enter our exciting online competitions and win incredible prizes!
               From tech gadgets to luxury cars, your dream prize could be just a ticket away.
             </p>
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-3 mt-6">
               {socialLinks.map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+                  className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all hover:scale-110"
                   aria-label={social.label}
                 >
                   <social.icon className="w-5 h-5" />
@@ -102,7 +108,7 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm">
-              &copy; {new Date().getFullYear()} RaffleSite. All rights reserved.
+              &copy; {new Date().getFullYear()} Premium Competitions. All rights reserved.
             </p>
             <div className="flex items-center gap-4 text-sm text-gray-400">
               <Link href="/terms" className="hover:text-white transition-colors">
@@ -117,7 +123,7 @@ export function Footer() {
             </div>
           </div>
           <p className="mt-4 text-xs text-gray-500 text-center md:text-left">
-            RaffleSite is a competition platform. 18+ only. Please play responsibly.
+            Premium Competitions is a competition platform. 18+ only. Please play responsibly.
           </p>
         </div>
       </div>

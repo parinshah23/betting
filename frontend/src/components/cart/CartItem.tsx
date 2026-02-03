@@ -15,7 +15,7 @@ interface CartItemProps {
 }
 
 export function CartItem({ item, onUpdateQuantity, onRemove, isUpdating = false }: CartItemProps) {
-  const isIssue = item.competitionStatus !== 'live';
+  const isIssue = item.competitionStatus && item.competitionStatus !== 'live';
 
   const handleQuantityChange = (newQty: number) => {
     if (newQty < 1) return;
@@ -49,7 +49,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove, isUpdating = false 
             <Link href={`/competitions/${item.competitionSlug}`} className="font-semibold text-neutral-900 hover:text-primary-600 line-clamp-2">
               {item.competitionTitle}
             </Link>
-            <button 
+            <button
               onClick={onRemove}
               className="text-neutral-400 hover:text-red-500 transition-colors p-1"
               aria-label="Remove item"
@@ -67,7 +67,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove, isUpdating = false 
           <div className="flex items-center gap-2 text-amber-600 text-sm bg-amber-50 p-2 rounded-lg">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>
-              Competition is {item.competitionStatus.replace('_', ' ')}. Please remove.
+              Competition is {item.competitionStatus?.replace('_', ' ') || 'unavailable'}. Please remove.
             </span>
           </div>
         )}
@@ -85,7 +85,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove, isUpdating = false 
             >
               <Minus className="w-3 h-3" />
             </Button>
-            
+
             <span className="w-8 text-center font-medium text-neutral-900">{item.quantity}</span>
 
             <Button
@@ -97,7 +97,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove, isUpdating = false 
             >
               <Plus className="w-3 h-3" />
             </Button>
-            
+
             <span className="text-xs text-neutral-400 ml-2">
               Max: {item.maxQuantity}
             </span>

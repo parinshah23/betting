@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { userModel } from '../models/user.model';
+import { emailService } from './email.service';
 import { hashPassword, comparePassword } from '../utils/password';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 
@@ -163,12 +164,8 @@ export const authService = {
       expiresAt,
     });
 
-    // In production, send email with reset link containing the raw token
-    // For now, we'll just log it (or you could return it in development)
-    console.log(`Password reset token for ${email}: ${token}`);
-    
-    // TODO: Send email with reset link
-    // await emailService.sendPasswordResetEmail(user.email, token);
+    // Send password reset email
+    await emailService.sendPasswordResetEmail(user.email, user.first_name, token);
   },
 
   /**

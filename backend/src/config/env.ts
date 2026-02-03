@@ -34,9 +34,18 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
 
-  // Email
-  EMAIL_API_KEY: z.string().optional(),
+  // Email - SMTP Configuration (Gmail, etc.)
+  EMAIL_PROVIDER: z.enum(['smtp', 'sendgrid', 'mailgun']).default('smtp'),
+  SMTP_HOST: z.string().default('smtp.gmail.com'),
+  SMTP_PORT: z.string().default('587'),
+  SMTP_SECURE: z.string().default('false'),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().default('noreply@example.com'),
+  EMAIL_FROM_NAME: z.string().default('Competition Platform'),
+  
+  // Legacy email config (for backward compatibility)
+  EMAIL_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -74,7 +83,16 @@ export const config = {
   },
 
   email: {
-    apiKey: parsed.data.EMAIL_API_KEY,
+    provider: parsed.data.EMAIL_PROVIDER,
+    smtp: {
+      host: parsed.data.SMTP_HOST,
+      port: parseInt(parsed.data.SMTP_PORT, 10),
+      secure: parsed.data.SMTP_SECURE === 'true',
+      user: parsed.data.SMTP_USER,
+      pass: parsed.data.SMTP_PASS,
+    },
     from: parsed.data.EMAIL_FROM,
+    fromName: parsed.data.EMAIL_FROM_NAME,
+    apiKey: parsed.data.EMAIL_API_KEY,
   },
 };

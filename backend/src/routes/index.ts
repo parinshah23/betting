@@ -5,6 +5,7 @@
  */
 
 import { Router } from 'express';
+import { authRateLimiter, adminRateLimiter } from '../middleware/rateLimit';
 import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import competitionRoutes from './competition.routes';
@@ -14,11 +15,12 @@ import orderRoutes from './order.routes';
 import walletRoutes from './wallet.routes';
 import winnerRoutes from './winner.routes';
 import adminRoutes from './admin.routes';
+import uploadRoutes from './upload.routes';
 
 const router = Router();
 
 // Public routes
-router.use('/auth', authRoutes);
+router.use('/auth', authRateLimiter, authRoutes);
 router.use('/competitions', competitionRoutes);
 router.use('/winners', winnerRoutes);
 
@@ -28,9 +30,10 @@ router.use('/tickets', ticketRoutes);
 router.use('/cart', cartRoutes);
 router.use('/orders', orderRoutes);
 router.use('/wallet', walletRoutes);
+router.use('/upload', uploadRoutes);
 
 // Admin routes (require authentication + admin role)
-router.use('/admin', adminRoutes);
+router.use('/admin', adminRateLimiter, adminRoutes);
 
 // API info route
 router.get('/', (req, res) => {

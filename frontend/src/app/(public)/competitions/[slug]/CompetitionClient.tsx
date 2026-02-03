@@ -49,6 +49,20 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
     );
   }
 
+  // Normalize competition data (handle both snake_case and camelCase from API)
+  const normalizedCompetition = {
+    ...competition,
+    ticketPrice: competition.ticketPrice || competition.ticket_price || 0,
+    totalTickets: competition.totalTickets || competition.total_tickets || 0,
+    soldTickets: competition.soldTickets || competition.sold_tickets || 0,
+    maxTicketsPerUser: competition.maxTicketsPerUser || competition.max_tickets_per_user || 0,
+    prizeValue: competition.prizeValue || competition.prize_value || 0,
+    skillQuestion: competition.skillQuestion || competition.skill_question || '',
+    skillAnswer: competition.skillAnswer || competition.skill_answer || '',
+    endDate: competition.endDate || competition.end_date || '',
+    instantWinsRemaining: competition.instantWinsRemaining || competition.instant_wins_remaining || 0,
+  };
+
   const handleVerified = (answer: string) => {
     setSkillAnswer(answer);
   };
@@ -67,7 +81,7 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
 
     setIsAddingToCart(true);
     try {
-      const success = await addItem(competition.id, quantity, skillAnswer);
+      const success = await addItem(normalizedCompetition.id, quantity, skillAnswer);
       if (success) {
         showSuccess(`Added ${quantity} tickets to cart!`);
       } else {
@@ -80,9 +94,9 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
     }
   };
 
-  const remainingTickets = competition.totalTickets - competition.soldTickets;
-  const isSoldOut = competition.status === 'sold_out' || remainingTickets <= 0;
-  const isEnded = competition.status === 'ended' || competition.status === 'completed';
+  const remainingTickets = normalizedCompetition.totalTickets - normalizedCompetition.soldTickets;
+  const isSoldOut = normalizedCompetition.status === 'sold_out' || remainingTickets <= 0;
+  const isEnded = normalizedCompetition.status === 'ended' || normalizedCompetition.status === 'completed';
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-10">
@@ -92,35 +106,35 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
         <ChevronRight className="w-4 h-4" />
         <Link href="/competitions" className="hover:text-primary-600">Competitions</Link>
         <ChevronRight className="w-4 h-4" />
-        <span className="text-neutral-900 font-medium truncate max-w-[200px]">{competition.title}</span>
+        <span className="text-neutral-900 font-medium truncate max-w-[200px]">{normalizedCompetition.title}</span>
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
         {/* Left Column: Images & Description */}
         <div className="lg:col-span-7 space-y-8">
-          <ImageGallery images={competition.images} />
+          <ImageGallery images={normalizedCompetition.images} />
 
           {/* Description - Mobile: Show after info, Desktop: Show here */}
           <div className="hidden lg:block space-y-6">
             <h2 className="text-2xl font-bold text-neutral-900">Prize Details</h2>
             <div 
               className="prose prose-neutral max-w-none text-neutral-600"
-              dangerouslySetInnerHTML={{ __html: competition.description }} 
+              dangerouslySetInnerHTML={{ __html: normalizedCompetition.description }} 
             />
           </div>
         </div>
 
         {/* Right Column: Info & Actions */}
         <div className="lg:col-span-5 space-y-8">
-          <CompetitionInfo competition={competition} />
+          <CompetitionInfo competition={normalizedCompetition} />
 
           {/* Action Area */}
           {!isEnded && !isSoldOut ? (
             <div className="space-y-6">
               {/* Skill Question */}
               <SkillQuestion 
-                question={competition.skillQuestion}
-                competitionId={competition.id}
+                question={normalizedCompetition.skillQuestion}
+                competitionId={normalizedCompetition.id}
                 onVerified={handleVerified}
                 disabled={!!skillAnswer} // Disable once verified
               />
@@ -128,8 +142,8 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
               {/* Ticket Selector */}
               <div className={!skillAnswer ? "opacity-50 pointer-events-none grayscale transition-all" : "transition-all"}>
                 <TicketSelector
-                  ticketPrice={competition.ticketPrice}
-                  maxQuantity={Math.min(competition.maxTicketsPerUser, remainingTickets)}
+                  ticketPrice={normalizedCompetition.ticketPrice}
+                  maxQuantity={Math.min(normalizedCompetition.maxTicketsPerUser, remainingTickets)}
                   onAddToCart={handleAddToCart}
                   isLoading={isAddingToCart}
                   disabled={!skillAnswer}

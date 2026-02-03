@@ -5,6 +5,12 @@
 :root {
   --foreground-rgb: 23, 23, 23;
   --background-rgb: 255, 255, 255;
+  
+  /* Premium Colors */
+  --premium-blue: #2563eb;
+  --premium-red: #dc2626;
+  --premium-white: #ffffff;
+  --premium-dark: #0f172a;
 }
 
 body {
@@ -15,6 +21,58 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  
+  /* Premium gradient text */
+  .text-gradient-premium {
+    background: linear-gradient(135deg, #2563eb, #dc2626);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Premium button hover effect */
+  .btn-premium {
+    @apply relative overflow-hidden transition-all duration-300;
+  }
+  
+  .btn-premium::after {
+    content: '';
+    @apply absolute inset-0 bg-white/20 translate-x-[-100%] transition-transform duration-300;
+  }
+  
+  .btn-premium:hover::after {
+    @apply translate-x-0;
+  }
+}
+
+@layer components {
+  /* Premium card styling */
+  .card-premium {
+    @apply bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden;
+    @apply hover:shadow-xl hover:border-primary-200 transition-all duration-300;
+  }
+  
+  /* Premium badge */
+  .badge-premium {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+    @apply bg-gradient-to-r from-primary-600 to-primary-500 text-white;
+  }
+  
+  /* Hero section gradient */
+  .hero-gradient {
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #1e3a8a 100%);
+  }
+  
+  /* CTA button gradient */
+  .cta-gradient {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  }
+  
+  /* Premium section divider */
+  .section-divider {
+    @apply h-1 w-20 mx-auto rounded-full;
+    background: linear-gradient(90deg, #2563eb, #dc2626);
   }
 }
 
@@ -49,6 +107,15 @@ body {
   }
 }
 
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(37, 99, 235, 0.6);
+  }
+}
+
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
@@ -61,31 +128,35 @@ body {
   animation: scale-in 0.2s ease-out;
 }
 
-/* Custom scrollbar */
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Custom scrollbar - Premium blue theme */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  background: linear-gradient(180deg, #2563eb, #1d4ed8);
 }
 
-/* Focus styles */
+/* Focus styles - Premium blue */
 *:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
 
-/* Selection styles */
+/* Selection styles - Premium blue */
 ::selection {
   background-color: #bfdbfe;
   color: #1e3a8a;

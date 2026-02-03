@@ -3,7 +3,9 @@ import { orderModel } from '../models/order.model';
 import { ticketModel } from '../models/ticket.model';
 import { walletModel } from '../models/wallet.model';
 import { competitionModel } from '../models/competition.model';
+import { userModel } from '../models/user.model';
 import { cartService } from '../services/cart.service';
+import { emailService } from '../services/email.service';
 import { sendSuccess, sendPaginated } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { BadRequestError, NotFoundError } from '../middleware/errorHandler';
@@ -11,7 +13,7 @@ import { config } from '../config/env';
 import Stripe from 'stripe';
 
 // Initialize Stripe (only if key is available)
-const stripe = config.stripe.secretKey 
+const stripe = config.stripe.secretKey
   ? new Stripe(config.stripe.secretKey, { apiVersion: '2023-10-16' })
   : null;
 
@@ -86,7 +88,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     const { use_wallet_balance } = req.body;
 
     // Get cart
-    const cart = cartService.getCart(userId);
+    const cart = await cartService.getCart(userId);
 
     if (cart.items.length === 0) {
       throw BadRequestError('Cart is empty');
@@ -145,8 +147,8 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       await ticketModel.reserveTickets(item.competition_id, item.quantity, userId, order.id);
     }
 
-    // Clear cart
-    cartService.clearCart(userId);
+    // NOTE: Don't clear cart here - only clear after successful payment
+    // Cart will be cleared in confirmOrder for Stripe payments, or below for wallet-only
 
     // If total is 0 (fully paid with wallet), mark as paid immediately
     if (totalAmount === 0) {
@@ -168,7 +170,29 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
 
       await orderModel.updateStatus(order.id, 'paid');
 
+      // Clear cart after successful wallet-only payment
+      await cartService.clearCart(userId);
+
       const updatedOrder = await orderModel.getOrderWithItems(order.id);
+
+      // Send order confirmation email for wallet-only payment
+      if (updatedOrder) {
+        const user = await userModel.findById(userId);
+        if (user && updatedOrder.items) {
+          const emailItems = updatedOrder.items.map((item) => ({
+            title: `Competition #${item.competition_id}`,
+            quantity: item.quantity,
+          }));
+
+          await emailService.sendOrderConfirmation(
+            user.email,
+            updatedOrder.order_number,
+            updatedOrder.total_amount,
+            emailItems
+          );
+        }
+      }
+
       return sendSuccess(res, {
         data: updatedOrder,
         message: 'Order created and paid successfully',
@@ -300,7 +324,28 @@ export const confirmOrder = async (req: Request, res: Response, next: NextFuncti
     // Update order status
     await orderModel.updateStatus(order_id, 'paid');
 
+    // Clear cart after successful payment
+    await cartService.clearCart(userId);
+
     const updatedOrder = await orderModel.getOrderWithItems(order_id);
+
+    // Send order confirmation email
+    if (updatedOrder) {
+      const user = await userModel.findById(userId);
+      if (user && updatedOrder.items) {
+        const emailItems = updatedOrder.items.map((item) => ({
+          title: `Competition #${item.competition_id}`,
+          quantity: item.quantity,
+        }));
+
+        await emailService.sendOrderConfirmation(
+          user.email,
+          updatedOrder.order_number,
+          updatedOrder.total_amount,
+          emailItems
+        );
+      }
+    }
 
     sendSuccess(res, {
       data: updatedOrder,

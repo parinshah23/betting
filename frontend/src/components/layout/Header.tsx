@@ -6,12 +6,12 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { 
-  Menu, 
-  X, 
-  ShoppingCart, 
-  User, 
-  LogOut, 
+import {
+  Menu,
+  X,
+  ShoppingCart,
+  User,
+  LogOut,
   LayoutDashboard,
   Ticket,
   Wallet,
@@ -31,11 +31,17 @@ export function Header() {
   ];
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-40">
+    <header className="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center">
-            <span className="text-2xl font-bold text-primary-600">RaffleSite</span>
+        <div className="flex justify-between items-center h-18 py-3">
+          <Link href="/" className="flex items-center gap-1.5 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:scale-105 transition-transform">
+              <span className="text-white font-bold text-lg">PC</span>
+            </div>
+            <div className="hidden sm:flex flex-col leading-tight">
+              <span className="text-xl font-bold text-gray-900">Premium</span>
+              <span className="text-sm font-semibold text-accent-600 -mt-0.5">Competitions</span>
+            </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">

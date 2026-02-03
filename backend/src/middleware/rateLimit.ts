@@ -23,10 +23,10 @@ const createRateLimitResponse = (req: Request, res: Response) => {
 };
 
 // Auth endpoints rate limiter (login/register)
-// 5 requests per 15 minutes
+// 20 requests per 1 minute (increased for testing)
 export const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  windowMs: 1 * 60 * 1000, // 1 minute (reduced from 15 minutes)
+  max: 20, // 20 attempts (increased from 5)
   message: createRateLimitResponse,
   standardHeaders: true,
   legacyHeaders: false,

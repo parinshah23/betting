@@ -12,7 +12,11 @@ import { Card } from '@/components/ui/Card';
 import type { Competition } from '@/types';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const fetcher = (url: string) => api.get(url).then((res) => res.data);
+interface CompetitionsApiResponse {
+  competitions: Competition[];
+}
+
+const fetcher = (url: string) => api.get<CompetitionsApiResponse>(url);
 
 const categories = [
   { value: '', label: 'All Categories' },
@@ -88,16 +92,37 @@ function CompetitionsContent() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const competitions = data?.data || [];
+  const competitions = data?.data?.competitions || [];
   const meta = data?.meta;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">All Competitions</h1>
-          <p className="text-gray-600 mt-1">Browse and enter our exciting raffles</p>
+      {/* Premium Hero Section */}
+      <section className="relative bg-gradient-to-br from-slate-900 via-primary-900 to-slate-900 text-white py-16 overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              <span className="text-white">All </span>
+              <span className="bg-gradient-to-r from-accent-400 to-accent-500 bg-clip-text text-transparent">Competitions</span>
+            </h1>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Browse our exciting raffles and enter for your chance to win incredible prizes
+            </p>
+          </div>
+        </div>
+
+        {/* Bottom gradient fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-50 to-transparent" />
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-4 relative z-20">
 
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
           <div className="flex flex-col lg:flex-row gap-4">
@@ -133,11 +158,10 @@ function CompetitionsContent() {
             <button
               key={tab.value}
               onClick={() => updateFilter('status', tab.value)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                status === tab.value
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-100'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${status === tab.value
+                ? 'bg-primary-600 text-white'
+                : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
             >
               {tab.label}
             </button>
@@ -199,7 +223,7 @@ function CompetitionsContent() {
               ))}
             </div>
 
-            {meta && meta.totalPages > 1 && (
+            {meta && meta.totalPages && meta.totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-8">
                 <Button
                   variant="outline"
@@ -211,17 +235,16 @@ function CompetitionsContent() {
                   Previous
                 </Button>
                 <div className="flex gap-1">
-                  {Array.from({ length: Math.min(meta.totalPages, 5) }, (_, i) => {
+                  {Array.from({ length: Math.min(meta.totalPages || 1, 5) }, (_, i) => {
                     const pageNum = i + 1;
                     return (
                       <button
                         key={pageNum}
                         onClick={() => updateFilter('page', pageNum.toString())}
-                        className={`w-10 h-10 rounded-lg text-sm font-medium ${
-                          page === pageNum
-                            ? 'bg-primary-600 text-white'
-                            : 'bg-white text-gray-600 hover:bg-gray-100'
-                        }`}
+                        className={`w-10 h-10 rounded-lg text-sm font-medium ${page === pageNum
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-white text-gray-600 hover:bg-gray-100'
+                          }`}
                       >
                         {pageNum}
                       </button>

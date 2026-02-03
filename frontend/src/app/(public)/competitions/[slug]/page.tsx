@@ -15,11 +15,11 @@ async function getCompetition(slug: string): Promise<CompetitionDetail | null> {
   // Use absolute URL for server-side fetch if API_BASE_URL is relative or needs Docker networking
   // Assuming API_BASE_URL in api.ts is correct for server-side (http://localhost:3001)
   const response = await api.get<CompetitionDetail>(`/competitions/${slug}`);
-  
+
   if (response.success && response.data) {
     return response.data;
   }
-  
+
   return null;
 }
 
@@ -28,14 +28,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!competition) {
     return {
-      title: 'Competition Not Found | RaffleSite',
+      title: 'Competition Not Found | Premium Competitions',
     };
   }
 
   const primaryImage = competition.images.find(img => img.isPrimary)?.url || competition.images[0]?.url;
 
   return {
-    title: `${competition.title} - Win Now | RaffleSite`,
+    title: `${competition.title} - Win Now | Premium Competitions`,
     description: competition.shortDescription,
     openGraph: {
       title: `${competition.title} - Win Now!`,

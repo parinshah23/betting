@@ -55,20 +55,54 @@ export default function CheckoutClient() {
     setError(null);
 
     try {
-      // 1. Create Order
-      const createOrderRes = await api.post<{ orderId: string; amountDue: number; clientSecret?: string; orderNumber: string }>('/orders/create', {
-        useWallet,
-        walletAmount: walletAmountToUse
+      // 1. Create Order (use snake_case for backend)
+      interface CreateOrderResponse {
+        order?: {
+          id: string;
+          order_number: string;
+          total_amount: number;
+        };
+        requires_payment?: boolean;
+        amount_to_charge?: number;
+        // If wallet covers everything, order is returned directly
+        id?: string;
+        order_number?: string;
+        total_amount?: number;
+      }
+
+      const createOrderRes = await api.post<CreateOrderResponse>('/orders/create', {
+        use_wallet_balance: useWallet
       });
 
       if (!createOrderRes.success || !createOrderRes.data) {
         throw new Error(createOrderRes.error?.message || 'Failed to create order');
       }
 
-      const { orderId, amountDue, clientSecret, orderNumber } = createOrderRes.data;
+      const data = createOrderRes.data;
+
+      // Check if payment with card is required
+      const requiresPayment = data.requires_payment && (data.amount_to_charge || 0) > 0;
+      const orderId = data.order?.id || data.id;
+      const orderNumber = data.order?.order_number || data.order_number;
+
+      if (!orderId) {
+        throw new Error('Order ID not received');
+      }
 
       // 2. Handle Stripe Payment if needed
-      if (amountDue > 0 && clientSecret) {
+      if (requiresPayment) {
+        // Get payment intent
+        const intentRes = await api.post<{ client_secret: string; payment_intent_id: string }>('/orders/payment-intent', {
+          order_id: orderId
+        });
+
+        if (!intentRes.success || !intentRes.data?.client_secret) {
+          throw new Error(intentRes.error?.message || 'Failed to create payment intent');
+        }
+
+        const clientSecret = intentRes.data.client_secret;
+        const paymentIntentId = intentRes.data.payment_intent_id;
+
         const cardElement = elements.getElement(CardElement);
         if (!cardElement) throw new Error('Card element not found');
 
@@ -88,20 +122,19 @@ export default function CheckoutClient() {
         if (paymentIntent.status !== 'succeeded') {
           throw new Error(`Payment status: ${paymentIntent.status}`);
         }
+
+        // 3. Confirm Order
+        const confirmRes = await api.post<{ id: string; status: string }>('/orders/confirm', {
+          order_id: orderId,
+          payment_intent_id: paymentIntentId
+        });
+
+        if (!confirmRes.success) {
+          throw new Error(confirmRes.error?.message || 'Order confirmation failed');
+        }
       }
 
-      // 3. Confirm Order
-      const confirmRes = await api.post<{ success: boolean }>('/orders/confirm', {
-        orderId
-      });
-
-      if (!confirmRes.success) {
-        // Payment succeeded but confirmation failed? This is an edge case.
-        // Usually we would show a "Contact Support" message or try to recover.
-        throw new Error(confirmRes.error?.message || 'Order confirmation failed');
-      }
-
-      // 4. Success
+      // 4. Success (order was paid with wallet or Stripe payment succeeded)
       showSuccess('Order placed successfully!');
       router.push(`/checkout/success?order=${orderNumber}`);
 
@@ -132,7 +165,7 @@ export default function CheckoutClient() {
             <h2 className="font-semibold text-lg text-neutral-900 mb-6">Payment Method</h2>
 
             {/* Wallet Section */}
-            <WalletSection 
+            <WalletSection
               wallet={wallet || null}
               useWallet={useWallet}
               onToggle={setUseWallet}
@@ -142,21 +175,21 @@ export default function CheckoutClient() {
             {/* Card Section */}
             {remainingToPay > 0 ? (
               <div className="space-y-4">
-                 <div className="flex justify-between items-center mb-2">
-                    <label className="font-medium text-neutral-700">Card Details</label>
-                    <span className="text-sm font-medium text-primary-600">
-                      Pay {formatCurrency(remainingToPay)}
-                    </span>
-                 </div>
-                 <StripeCardSection />
+                <div className="flex justify-between items-center mb-2">
+                  <label className="font-medium text-neutral-700">Card Details</label>
+                  <span className="text-sm font-medium text-primary-600">
+                    Pay {formatCurrency(remainingToPay)}
+                  </span>
+                </div>
+                <StripeCardSection />
               </div>
             ) : (
               <div className="p-4 bg-green-50 text-green-700 rounded-lg border border-green-200 flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-green-500" />
-                 <p className="font-medium">Fully covered by wallet balance</p>
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <p className="font-medium">Fully covered by wallet balance</p>
               </div>
             )}
-            
+
             {/* Error Display */}
             {error && (
               <div className="mt-6 p-4 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm">
@@ -175,7 +208,7 @@ export default function CheckoutClient() {
             >
               {isProcessing ? 'Processing...' : `Pay ${formatCurrency(remainingToPay > 0 ? remainingToPay : 0)}`}
             </Button>
-            
+
             <p className="text-center text-xs text-neutral-500 mt-4">
               By placing this order, you agree to our Terms and Conditions.
             </p>
@@ -184,7 +217,7 @@ export default function CheckoutClient() {
 
         {/* Right: Order Summary */}
         <div className="lg:col-span-5">
-          <OrderSummaryPanel 
+          <OrderSummaryPanel
             cart={cart}
             walletAmount={walletAmountToUse}
           />

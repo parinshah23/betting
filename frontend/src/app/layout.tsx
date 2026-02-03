@@ -12,8 +12,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'RaffleSite - Win Amazing Prizes',
-  description: 'Enter our exciting online raffles and win incredible prizes.',
+  title: 'Premium Competitions - Win Amazing Prizes',
+  description: 'Enter our exciting online competitions and win incredible prizes.',
 };
 
 export default function RootLayout({

@@ -5,6 +5,7 @@ import { orderModel } from '../models/order.model';
 import { userModel } from '../models/user.model';
 import { walletModel } from '../models/wallet.model';
 import { contentPageModel, winnerGalleryModel } from '../models/content.model';
+import { emailService } from '../services/email.service';
 import { sendSuccess, sendPaginated } from '../utils/response';
 import { NotFoundError, BadRequestError } from '../middleware/errorHandler';
 import pool from '../config/database';
@@ -318,6 +319,17 @@ export const executeDraw = async (req: Request, res: Response, next: NextFunctio
 
     // Get winner details
     const winner = await userModel.findById(winningTicket.user_id);
+
+    // Send winner notification email
+    if (winner && competition) {
+      await emailService.sendWinnerNotification(
+        winner.email,
+        winner.first_name,
+        competition.title,
+        winningTicket.ticket_number,
+        competition.prize_value
+      );
+    }
 
     sendSuccess(res, {
       data: {
@@ -765,6 +777,229 @@ export const addWinnerToGallery = async (req: Request, res: Response, next: Next
       data: winner,
       message: 'Winner added to gallery successfully',
     }, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Dashboard Stats & Analytics
+
+/**
+ * Get admin dashboard statistics
+ */
+export const getDashboardStats = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Total users
+    const usersResult = await pool.query('SELECT COUNT(*) FROM users');
+    const totalUsers = parseInt(usersResult.rows[0].count, 10);
+
+    // New users in last 7 days
+    const recentUsersResult = await pool.query(
+      "SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '7 days'"
+    );
+    const recentUsers = parseInt(recentUsersResult.rows[0].count, 10);
+
+    // User growth percentage (comparing to previous 7 days)
+    const prevUsersResult = await pool.query(
+      "SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '14 days' AND created_at < NOW() - INTERVAL '7 days'"
+    );
+    const prevUsers = parseInt(prevUsersResult.rows[0].count, 10);
+    const userGrowth = prevUsers > 0 ? Math.round(((recentUsers - prevUsers) / prevUsers) * 100) : 0;
+
+    // Total competitions
+    const competitionsResult = await pool.query('SELECT COUNT(*) FROM competitions');
+    const totalCompetitions = parseInt(competitionsResult.rows[0].count, 10);
+
+    // Live competitions
+    const liveCompResult = await pool.query("SELECT COUNT(*) FROM competitions WHERE status = 'live'");
+    const liveCompetitions = parseInt(liveCompResult.rows[0].count, 10);
+
+    // Total orders
+    const ordersResult = await pool.query('SELECT COUNT(*) FROM orders');
+    const totalOrders = parseInt(ordersResult.rows[0].count, 10);
+
+    // Pending orders
+    const pendingOrdersResult = await pool.query("SELECT COUNT(*) FROM orders WHERE status = 'pending'");
+    const pendingOrders = parseInt(pendingOrdersResult.rows[0].count, 10);
+
+    // Total revenue
+    const revenueResult = await pool.query(
+      "SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE status = 'paid'"
+    );
+    const totalRevenue = parseFloat(revenueResult.rows[0].total);
+
+    // Today's revenue
+    const todayRevenueResult = await pool.query(
+      "SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE status = 'paid' AND created_at >= CURRENT_DATE"
+    );
+    const todayRevenue = parseFloat(todayRevenueResult.rows[0].total);
+
+    // Revenue growth (comparing today to yesterday)
+    const yesterdayRevenueResult = await pool.query(
+      "SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE status = 'paid' AND created_at >= CURRENT_DATE - INTERVAL '1 day' AND created_at < CURRENT_DATE"
+    );
+    const yesterdayRevenue = parseFloat(yesterdayRevenueResult.rows[0].total);
+    const revenueGrowth = yesterdayRevenue > 0 ? Math.round(((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100) : 0;
+
+    // Recent tickets sold (last 7 days)
+    const recentTicketsResult = await pool.query(
+      "SELECT COUNT(*) FROM tickets WHERE status = 'sold' AND purchased_at >= NOW() - INTERVAL '7 days'"
+    );
+    const recentTickets = parseInt(recentTicketsResult.rows[0].count, 10);
+
+    sendSuccess(res, {
+      data: {
+        totalUsers,
+        recentUsers,
+        userGrowth,
+        totalCompetitions,
+        liveCompetitions,
+        totalOrders,
+        pendingOrders,
+        totalRevenue,
+        todayRevenue,
+        revenueGrowth,
+        recentTickets,
+      },
+      message: 'Dashboard stats retrieved successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get recent admin activity
+ */
+export const getRecentActivity = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    // Get recent orders
+    const ordersResult = await pool.query(
+      `SELECT 
+        o.id,
+        o.order_number,
+        o.total_amount,
+        o.status,
+        o.created_at,
+        u.email,
+        u.first_name,
+        u.last_name
+       FROM orders o
+       JOIN users u ON o.user_id = u.id
+       ORDER BY o.created_at DESC
+       LIMIT $1`,
+      [limit]
+    );
+
+    // Get recent user registrations
+    const usersResult = await pool.query(
+      `SELECT 
+        id,
+        email,
+        first_name,
+        last_name,
+        created_at
+       FROM users
+       ORDER BY created_at DESC
+       LIMIT $1`,
+      [limit]
+    );
+
+    // Get recent ticket purchases
+    const ticketsResult = await pool.query(
+      `SELECT 
+        t.id,
+        t.ticket_number,
+        t.purchased_at,
+        c.title as competition_title,
+        u.email
+       FROM tickets t
+       JOIN competitions c ON t.competition_id = c.id
+       JOIN users u ON t.user_id = u.id
+       WHERE t.status = 'sold'
+       ORDER BY t.purchased_at DESC
+       LIMIT $1`,
+      [limit]
+    );
+
+    // Combine and format activities
+    const activities = [
+      ...ordersResult.rows.map(order => ({
+        id: `order-${order.id}`,
+        type: 'order' as const,
+        description: `Order #${order.order_number} ${order.status === 'paid' ? 'completed' : order.status} - ${order.email}`,
+        amount: parseFloat(order.total_amount),
+        status: order.status,
+        createdAt: order.created_at,
+      })),
+      ...usersResult.rows.map(user => ({
+        id: `user-${user.id}`,
+        type: 'user' as const,
+        description: `New user registered: ${user.first_name} ${user.last_name} (${user.email})`,
+        createdAt: user.created_at,
+      })),
+      ...ticketsResult.rows.map(ticket => ({
+        id: `ticket-${ticket.id}`,
+        type: 'ticket' as const,
+        description: `Ticket #${ticket.ticket_number} purchased for ${ticket.competition_title} - ${ticket.email}`,
+        createdAt: ticket.purchased_at,
+      })),
+    ];
+
+    // Sort by date (newest first) and limit
+    activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    sendSuccess(res, {
+      data: activities.slice(0, limit),
+      message: 'Recent activity retrieved successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get top performing competitions
+ */
+export const getTopCompetitions = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 5;
+
+    const result = await pool.query(
+      `SELECT 
+        c.id,
+        c.title,
+        c.total_tickets,
+        c.status,
+        c.end_date,
+        COUNT(t.id) FILTER (WHERE t.status = 'sold') as sold_tickets,
+        COALESCE(SUM(o.total_amount) FILTER (WHERE o.status = 'paid'), 0) as revenue
+       FROM competitions c
+       LEFT JOIN tickets t ON t.competition_id = c.id
+       LEFT JOIN orders o ON o.id = t.order_id
+       WHERE c.status IN ('live', 'ended', 'completed')
+       GROUP BY c.id
+       ORDER BY revenue DESC
+       LIMIT $1`,
+      [limit]
+    );
+
+    const competitions = result.rows.map(comp => ({
+      id: comp.id,
+      title: comp.title,
+      totalTickets: parseInt(comp.total_tickets),
+      soldTickets: parseInt(comp.sold_tickets),
+      revenue: parseFloat(comp.revenue),
+      status: comp.status,
+      endDate: comp.end_date,
+    }));
+
+    sendSuccess(res, {
+      data: competitions,
+      message: 'Top competitions retrieved successfully',
+    });
   } catch (error) {
     next(error);
   }

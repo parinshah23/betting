@@ -19,8 +19,11 @@ interface ApiResponse<T> {
     page?: number;
     limit?: number;
     total?: number;
+    totalPages?: number;
   };
 }
+
+const TOKEN_KEY = 'access_token';
 
 class ApiClient {
   private baseUrl: string;
@@ -28,10 +31,25 @@ class ApiClient {
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+    // Load token from localStorage on init (client-side only)
+    if (typeof window !== 'undefined') {
+      this.accessToken = localStorage.getItem(TOKEN_KEY);
+    }
   }
 
   setAccessToken(token: string | null) {
     this.accessToken = token;
+    if (typeof window !== 'undefined') {
+      if (token) {
+        localStorage.setItem(TOKEN_KEY, token);
+      } else {
+        localStorage.removeItem(TOKEN_KEY);
+      }
+    }
+  }
+
+  getAccessToken(): string | null {
+    return this.accessToken;
   }
 
   private async request<T>(
@@ -40,10 +58,19 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
 
+    // Reload token from localStorage on each request (in case it was updated elsewhere)
+    if (typeof window !== 'undefined') {
+      this.accessToken = localStorage.getItem(TOKEN_KEY);
+    }
+
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
       ...options.headers,
     };
+
+    // Only set Content-Type if not FormData (browser sets it with boundary for FormData)
+    if (!(options.body instanceof FormData)) {
+      (headers as Record<string, string>)['Content-Type'] = 'application/json';
+    }
 
     if (this.accessToken) {
       (headers as Record<string, string>)['Authorization'] = `Bearer ${this.accessToken}`;
@@ -78,6 +105,16 @@ class ApiClient {
         },
       };
     }
+  }
+
+  /**
+   * Upload file with FormData
+   */
+  async upload<T>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: formData,
+    });
   }
 
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {

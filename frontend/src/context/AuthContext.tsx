@@ -79,9 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
-      const response = await api.post<{ user: User; accessToken: string }>('/auth/login', credentials);
+      const response = await api.post<{ user: User; tokens: { accessToken: string; refreshToken: string } }>('/auth/login', credentials);
       if (response.success && response.data) {
-        api.setAccessToken(response.data.accessToken);
+        api.setAccessToken(response.data.tokens.accessToken);
         setState({
           user: response.data.user,
           isLoading: false,
@@ -110,16 +110,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (data: RegisterData): Promise<boolean> => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
-      const response = await api.post<{ user: User; accessToken: string }>('/auth/register', data);
+      // Register returns just user data, no tokens (user needs to login after registration)
+      const response = await api.post<{ id: string; email: string; first_name: string; last_name: string; role: string }>('/auth/register', data);
       if (response.success && response.data) {
-        api.setAccessToken(response.data.accessToken);
-        setState({
-          user: response.data.user,
-          isLoading: false,
-          isAuthenticated: true,
-          error: null,
-        });
-        return true;
+        // Auto-login after successful registration
+        return await login({ email: data.email, password: data.password });
       } else {
         setState((prev) => ({
           ...prev,
