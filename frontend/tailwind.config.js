@@ -8,32 +8,32 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Premium Blue - Main brand color
+        // Void Blue - Backgrounds & Depth
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',  // Vibrant blue
-          600: '#2563eb',  // Primary blue
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#3b82f6',  // Electric Blue (Primary Action)
+          600: '#2563eb',
           700: '#1d4ed8',
           800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
+          900: '#0f172a',
+          950: '#020617',  // Void Blue (Main Background)
         },
-        // Premium Red - Accent/CTA color
+        // Plasma Red - Accents & "Hot" Actions
         accent: {
-          50: '#fef2f2',
-          100: '#fee2e2',
-          200: '#fecaca',
-          300: '#fca5a5',
-          400: '#f87171',
-          500: '#ef4444',  // Vibrant red
-          600: '#dc2626',  // Action red
-          700: '#b91c1c',
-          800: '#991b1b',
-          900: '#7f1d1d',
+          50: '#fff1f2',
+          100: '#ffe4e6',
+          200: '#fecdd3',
+          300: '#fda4af',
+          400: '#fb7185',
+          500: '#f43f5e',  // Rose Red (Vibrant)
+          600: '#e11d48',
+          700: '#be123c',
+          800: '#9f1239',
+          900: '#881337',
         },
         // Success green
         success: {
@@ -44,8 +44,8 @@ module.exports = {
         },
         // Danger/Error
         danger: {
-          500: '#ef4444',
-          600: '#dc2626',
+          500: '#f43f5e',
+          600: '#e11d48',
         },
         // Warning
         warning: {
@@ -58,13 +58,26 @@ module.exports = {
         display: ['Poppins', 'sans-serif'],
       },
       backgroundImage: {
-        'gradient-premium': 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%)',
-        'gradient-hero': 'linear-gradient(135deg, #1e40af 0%, #2563eb 40%, #dc2626 100%)',
-        'gradient-cta': 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
+        'gradient-premium': 'linear-gradient(135deg, #020617 0%, #1e3a8a 50%, #1e40af 100%)',
+        'gradient-hero': 'radial-gradient(circle at top right, #1e3a8a 0%, #020617 60%)',
+        'gradient-cta': 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+        'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
       },
       boxShadow: {
-        'premium': '0 10px 40px -10px rgba(37, 99, 235, 0.3)',
-        'premium-red': '0 10px 40px -10px rgba(220, 38, 38, 0.3)',
+        'premium': '0 20px 40px -10px rgba(2, 6, 23, 0.5)',
+        'glow-blue': '0 0 20px rgba(59, 130, 246, 0.5)',
+        'glow-red': '0 0 20px rgba(244, 63, 94, 0.5)',
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+      },
+      animation: {
+        'float': 'float 6s ease-in-out infinite',
+        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-20px)' },
+        }
       },
     },
   },

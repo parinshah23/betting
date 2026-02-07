@@ -479,21 +479,26 @@ export default function HomePage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 text-white relative overflow-hidden">
+      <section className="py-24 bg-primary-950 relative overflow-hidden">
+        {/* Ambient Glows */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-accent-400/10 rounded-full blur-3xl" />
+          <div className="absolute top-0 left-1/4 w-full h-full bg-gradient-to-b from-primary-900/20 to-transparent opacity-50" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl animate-pulse-slow" />
+          <div className="absolute top-0 left-0 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl animate-pulse-slow" />
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Change Your Life?</h2>
-          <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
+        {/* Grid Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] opacity-20" />
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white tracking-tight">Ready to Change Your Life?</h2>
+          <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
             Join thousands of winners who&apos;ve already won amazing prizes. Your luck starts here!
           </p>
           <Link href="/competitions">
             <Button
               size="lg"
-              className="bg-white text-primary-700 hover:bg-gray-100 px-10 py-4 text-lg font-bold shadow-xl hover:scale-105 transition-all duration-300"
+              className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-10 py-5 text-lg font-bold shadow-glow-red hover:shadow-glow-red/80 hover:scale-105 transition-all duration-300"
             >
               Browse All Competitions
               <ArrowRight className="w-5 h-5 ml-2" />
