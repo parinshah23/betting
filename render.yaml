@@ -1,3 +1,9 @@
+databases:
+  - name: premium-competitions-db
+    databaseName: raffle_db
+    user: raffle_user
+    plan: free # Note: Render Free Tier databases expire after 90 days
+
 services:
   - type: web
     name: premium-competitions-backend
@@ -12,14 +18,16 @@ services:
         value: production
       - key: NPM_CONFIG_PRODUCTION
         value: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: premium-competitions-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
       - key: PORT
         value: 10000
-      - key: DATABASE_URL
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: REFRESH_TOKEN_SECRET
-        sync: false
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
