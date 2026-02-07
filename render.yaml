@@ -15,9 +15,9 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
-        generate: true
+        sync: false
       - key: REFRESH_TOKEN_SECRET
-        generate: true
+        sync: false
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
