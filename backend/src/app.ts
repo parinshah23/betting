@@ -55,12 +55,48 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
+// Enhanced CORS configuration with logging for debugging
+app.use((req, res, next) => {
+  // Log origin for debugging production issues
+  const origin = req.headers.origin;
+  if (origin) {
+    console.log(`[CORS] Request from origin: ${origin}`);
+  }
+  next();
+});
+
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    // Check against configured URL
+    const allowed = config.frontendUrl;
+
+    // Strip trailing slashes for comparison
+    const cleanOrigin = origin.replace(/\/$/, '');
+    const cleanAllowed = allowed.replace(/\/$/, '');
+
+    if (cleanOrigin === cleanAllowed || process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    } else {
+      console.warn(`[CORS] Blocked request from: ${origin}. Expected: ${allowed}`);
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// Root route for easy verification
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Competition Platform API is running',
+    version: '1.0.0',
+    environment: config.nodeEnv
+  });
+});
 
 // Rate limiting
 app.use(generalRateLimiter);
