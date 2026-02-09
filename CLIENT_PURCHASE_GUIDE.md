@@ -1,4 +1,4 @@
-# 💰 Service & Purchase Guide for "Premium Competitions"
+235# 💰 Service & Purchase Guide for "Premium Competitions"
 
 To launch your platform, you need to sign up for the following services. Most have a **Free Tier** that is perfectly fine for starting out.
 
