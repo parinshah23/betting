@@ -6,6 +6,10 @@
 
 import app from './app';
 import { config } from './config/env';
+import { validateEnv } from './config/env-validator';
+
+// Validate environment variables before starting
+validateEnv();
 
 const PORT = config.port || 3001;
 

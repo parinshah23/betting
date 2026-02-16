@@ -12,9 +12,8 @@ import { Card } from '@/components/ui/Card';
 import type { Competition } from '@/types';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface CompetitionsApiResponse {
-  competitions: Competition[];
-}
+// Backend returns flat array directly in data, not wrapped in competitions object
+interface CompetitionsApiResponse extends Array<Competition> {}
 
 const fetcher = (url: string) => api.get<CompetitionsApiResponse>(url);
 
@@ -92,7 +91,7 @@ function CompetitionsContent() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const competitions = data?.data?.competitions || [];
+  const competitions = data?.data || [];
   const meta = data?.meta;
 
   return (

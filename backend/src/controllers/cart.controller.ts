@@ -129,25 +129,28 @@ export const applyPromoCode = async (req: Request, res: Response, next: NextFunc
     const { userId } = (req as AuthenticatedRequest).user;
     const { promo_code } = req.body;
 
-    // TODO: Validate promo code against database
-    // For now, accept any promo code with 10% discount
-    const validPromoCodes: Record<string, number> = {
-      'WELCOME10': 10,
-      'RAFFLE10': 10,
-      'SAVE20': 20,
-    };
-
-    const discountPercent = validPromoCodes[promo_code.toUpperCase()];
-
-    if (discountPercent === undefined) {
-      throw BadRequestError('Invalid promo code');
+    if (!promo_code) {
+      throw BadRequestError('Promo code is required');
     }
 
-    const cart = await cartService.applyPromoCode(userId, promo_code.toUpperCase(), discountPercent);
+    // Get cart total for validation
+    const cart = await cartService.getCart(userId);
+    const cartTotal = cart.items.reduce((sum: number, item: any) => sum + (item.quantity * item.unit_price), 0);
+
+    // Validate promo code against database
+    const promoCodeModel = require('../models/promo-code.model').default;
+    const validation = await promoCodeModel.validatePromoCode(promo_code, cartTotal);
+
+    if (!validation.valid) {
+      throw BadRequestError(validation.error || 'Invalid promo code');
+    }
+
+    // Apply promo code to cart
+    const updatedCart = await cartService.applyPromoCode(userId, promo_code.toUpperCase(), validation.discountValue);
 
     sendSuccess(res, {
-      data: cart,
-      message: `Promo code applied: ${discountPercent}% discount`,
+      data: updatedCart,
+      message: `Promo code applied: £${validation.discountValue.toFixed(2)} discount`,
     });
   } catch (error) {
     next(error);

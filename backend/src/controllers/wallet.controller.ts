@@ -7,7 +7,7 @@ import { config } from '../config/env';
 import Stripe from 'stripe';
 
 // Initialize Stripe (only if key is available)
-const stripe = config.stripe.secretKey 
+const stripe = config.stripe.secretKey
   ? new Stripe(config.stripe.secretKey, { apiVersion: '2023-10-16' })
   : null;
 
@@ -17,9 +17,9 @@ const stripe = config.stripe.secretKey
 export const getWallet = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId } = (req as AuthenticatedRequest).user;
-    
+
     let wallet = await walletModel.findByUserId(userId);
-    
+
     // Create wallet if it doesn't exist
     if (!wallet) {
       wallet = await walletModel.create(userId);
@@ -48,7 +48,7 @@ export const getTransactions = async (req: Request, res: Response, next: NextFun
     const { page, limit, type } = req.query;
 
     const wallet = await walletModel.findByUserId(userId);
-    
+
     if (!wallet) {
       // Return empty transactions if wallet doesn't exist
       return sendPaginated(res, [], 1, 20, 0);
@@ -104,8 +104,10 @@ export const createDeposit = async (req: Request, res: Response, next: NextFunct
 
     sendSuccess(res, {
       data: {
+        clientSecret: paymentIntent.client_secret,
         client_secret: paymentIntent.client_secret,
         payment_intent_id: paymentIntent.id,
+        publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY,
         amount,
       },
       message: 'Deposit initiated. Complete payment to add funds.',

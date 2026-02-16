@@ -14,6 +14,7 @@ router.post('/add', validate(addToCartSchema), cartController.addToCart);
 router.put('/update', validate(updateCartItemSchema), cartController.updateCartItem);
 router.delete('/:itemId', cartController.removeFromCart);
 router.post('/apply-promo', validate(applyPromoSchema), cartController.applyPromoCode);
+router.delete('/promo', cartController.removePromoCode);
 router.delete('/clear', cartController.clearCart);
 
 export default router;

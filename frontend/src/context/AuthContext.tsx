@@ -110,8 +110,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (data: RegisterData): Promise<boolean> => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
+      // Map frontend camelCase to backend snake_case
+      const payload = {
+        email: data.email,
+        password: data.password,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        phone: data.phone,
+      };
+
       // Register returns just user data, no tokens (user needs to login after registration)
-      const response = await api.post<{ id: string; email: string; first_name: string; last_name: string; role: string }>('/auth/register', data);
+      const response = await api.post<{ id: string; email: string; first_name: string; last_name: string; role: string }>('/auth/register', payload);
       if (response.success && response.data) {
         // Auto-login after successful registration
         return await login({ email: data.email, password: data.password });
