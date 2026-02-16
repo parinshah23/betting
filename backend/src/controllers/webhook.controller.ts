@@ -9,8 +9,8 @@ import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import { config } from '../config/env';
 import { orderModel } from '../models/order.model';
-// import { emailService } from '../services/email.service';
 import { cartService } from '../services/cart.service';
+import pool from '../config/database';
 
 // Initialize Stripe with explicit type handling for config
 const stripeSecretKey = config.stripe.secretKey || '';
@@ -84,8 +84,55 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
     console.log(`PaymentIntent ${paymentIntent.id} succeeded`);
 
-    const orderId = paymentIntent.metadata?.order_id;
-    const userId = paymentIntent.metadata?.user_id;
+    const metadata = paymentIntent.metadata;
+
+    // Handle wallet deposit
+    if (metadata?.type === 'wallet_deposit') {
+        try {
+            const amount = parseFloat(metadata.amount);
+            const userId = metadata.user_id || metadata.userId;
+
+            // Get user's wallet
+            const { walletModel } = require('../models/wallet.model');
+            const wallet = await walletModel.findByUserId(userId);
+
+            if (!wallet) {
+                console.error('Wallet not found for user:', userId);
+                return;
+            }
+
+            // Credit the wallet
+            await walletModel.credit(
+                wallet.id,
+                amount,
+                'Wallet deposit via Stripe',
+                paymentIntent.id
+            );
+
+            // Send confirmation email
+            const { userModel } = require('../models/user.model');
+            const user = await userModel.findById(userId);
+
+            if (user) {
+                try {
+                    const { emailService } = require('../services/email.service');
+                    await emailService.sendDepositConfirmation(user.email, amount);
+                } catch (emailErr) {
+                    console.error('Failed to send deposit confirmation email:', emailErr);
+                }
+            }
+
+            console.log(`Wallet credited: £${amount} for user ${userId}`);
+            return;
+        } catch (error) {
+            console.error('Error processing wallet deposit:', error);
+            return;
+        }
+    }
+
+    // Handle competition purchase (existing flow)
+    const orderId = metadata?.order_id;
+    const userId = metadata?.user_id;
 
     if (!orderId) {
         console.error('No order_id in payment intent metadata');
@@ -116,9 +163,6 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
         console.log(`Cart cleared for user ${userId}`);
     }
 
-    // Note: To send confirmation email, we need to get user email
-    // This would typically be stored in order or fetched from users table
-    // For now, we log the success
     console.log(`Order ${orderId} payment confirmed. Items: ${order.items?.length || 0}`);
 }
 
@@ -128,19 +172,90 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
 async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
     console.log(`PaymentIntent ${paymentIntent.id} failed`);
 
-    const orderId = paymentIntent.metadata?.order_id;
+    try {
+        const paymentIntentId = paymentIntent.id;
 
-    if (!orderId) {
-        console.error('No order_id in payment intent metadata');
-        return;
+        // Find order by payment intent
+        const orderResult = await pool.query(
+            'SELECT * FROM orders WHERE stripe_payment_intent_id = $1',
+            [paymentIntentId]
+        );
+
+        if (orderResult.rows.length === 0) {
+            console.log('No order found for failed payment:', paymentIntentId);
+            return;
+        }
+
+        const order = orderResult.rows[0];
+
+        // 1. Update order status
+        await pool.query(
+            'UPDATE orders SET status = $1 WHERE id = $2',
+            ['failed', order.id]
+        );
+
+        // 2. Release reserved tickets
+        const ticketsResult = await pool.query(
+            'SELECT * FROM tickets WHERE order_id = $1',
+            [order.id]
+        );
+
+        for (const ticket of ticketsResult.rows) {
+            await pool.query(
+                `UPDATE tickets
+                 SET status = 'available', user_id = NULL, order_id = NULL
+                 WHERE id = $1`,
+                [ticket.id]
+            );
+        }
+
+        // 3. Update competition tickets_sold count (decrement)
+        if (ticketsResult.rows.length > 0) {
+            // Group tickets by competition to decrement correctly
+            const compTickets: Record<string, number> = {};
+            for (const ticket of ticketsResult.rows) {
+                compTickets[ticket.competition_id] = (compTickets[ticket.competition_id] || 0) + 1;
+            }
+            for (const [compId, count] of Object.entries(compTickets)) {
+                await pool.query(
+                    'UPDATE competitions SET tickets_sold = GREATEST(tickets_sold - $1, 0) WHERE id = $2',
+                    [count, compId]
+                );
+            }
+        }
+
+        // 4. Return wallet amount if used
+        if (order.wallet_amount_used && parseFloat(order.wallet_amount_used) > 0) {
+            const { walletModel } = require('../models/wallet.model');
+            const wallet = await walletModel.findByUserId(order.user_id);
+
+            if (wallet) {
+                await walletModel.credit(
+                    wallet.id,
+                    parseFloat(order.wallet_amount_used),
+                    `Payment failed - refund for order ${order.order_number}`,
+                    order.id
+                );
+            }
+        }
+
+        // 5. Send failure email
+        try {
+            const { userModel } = require('../models/user.model');
+            const user = await userModel.findById(order.user_id);
+
+            if (user) {
+                const { emailService } = require('../services/email.service');
+                await emailService.sendPaymentFailureEmail(user.email, order);
+            }
+        } catch (emailErr) {
+            console.error('Failed to send payment failure email:', emailErr);
+        }
+
+        console.log(`Payment failed processed for order ${order.order_number}`);
+    } catch (error) {
+        console.error('Handle payment failed error:', error);
     }
-
-    // Update order status to failed
-    await orderModel.updateStatus(orderId, 'failed');
-    console.log(`Order ${orderId} marked as failed`);
-
-    // TODO: Consider sending failure notification email
-    // TODO: Release reserved tickets
 }
 
 /**
@@ -149,21 +264,95 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
 async function handleChargeRefunded(charge: Stripe.Charge) {
     console.log(`Charge ${charge.id} refunded`);
 
-    // Get payment intent ID from charge
-    const paymentIntentId = typeof charge.payment_intent === 'string'
-        ? charge.payment_intent
-        : charge.payment_intent?.id;
+    try {
+        // Get payment intent ID from charge
+        const paymentIntentId = typeof charge.payment_intent === 'string'
+            ? charge.payment_intent
+            : charge.payment_intent?.id;
 
-    if (!paymentIntentId) {
-        console.error('No payment_intent in charge');
-        return;
+        if (!paymentIntentId) {
+            console.error('No payment_intent in charge');
+            return;
+        }
+
+        // Find order by payment intent ID
+        const orderResult = await pool.query(
+            'SELECT * FROM orders WHERE stripe_payment_intent_id = $1',
+            [paymentIntentId]
+        );
+
+        if (orderResult.rows.length === 0) {
+            console.log('No order found for refunded charge:', paymentIntentId);
+            return;
+        }
+
+        const order = orderResult.rows[0];
+
+        // 1. Update order status
+        await pool.query(
+            'UPDATE orders SET status = $1 WHERE id = $2',
+            ['refunded', order.id]
+        );
+
+        // 2. Find and release tickets
+        const ticketsResult = await pool.query(
+            'SELECT * FROM tickets WHERE order_id = $1',
+            [order.id]
+        );
+
+        for (const ticket of ticketsResult.rows) {
+            await pool.query(
+                `UPDATE tickets
+                 SET status = 'available', user_id = NULL, order_id = NULL
+                 WHERE id = $1`,
+                [ticket.id]
+            );
+        }
+
+        // 3. Update competition tickets_sold count
+        if (ticketsResult.rows.length > 0) {
+            const compTickets: Record<string, number> = {};
+            for (const ticket of ticketsResult.rows) {
+                compTickets[ticket.competition_id] = (compTickets[ticket.competition_id] || 0) + 1;
+            }
+            for (const [compId, count] of Object.entries(compTickets)) {
+                await pool.query(
+                    'UPDATE competitions SET tickets_sold = GREATEST(tickets_sold - $1, 0) WHERE id = $2',
+                    [count, compId]
+                );
+            }
+        }
+
+        // 4. Credit wallet if wallet was used
+        if (order.wallet_amount_used && parseFloat(order.wallet_amount_used) > 0) {
+            const { walletModel } = require('../models/wallet.model');
+            const wallet = await walletModel.findByUserId(order.user_id);
+
+            if (wallet) {
+                await walletModel.credit(
+                    wallet.id,
+                    parseFloat(order.wallet_amount_used),
+                    `Refund for order ${order.order_number}`,
+                    order.id
+                );
+            }
+        }
+
+        // 5. Send refund email
+        try {
+            const { userModel } = require('../models/user.model');
+            const user = await userModel.findById(order.user_id);
+
+            if (user) {
+                const { emailService } = require('../services/email.service');
+                await emailService.sendRefundConfirmation(user.email, order);
+            }
+        } catch (emailErr) {
+            console.error('Failed to send refund email:', emailErr);
+        }
+
+        console.log(`Refund processed for order ${order.order_number}`);
+    } catch (error) {
+        console.error('Handle refund error:', error);
     }
-
-    // Find order by payment intent ID (you may need to add this field to orders table)
-    // For now, log the refund
-    console.log(`Refund processed for payment intent: ${paymentIntentId}`);
-
-    // TODO: Update order status to 'refunded'
-    // TODO: Handle partial refunds
-    // TODO: Return tickets to pool
 }

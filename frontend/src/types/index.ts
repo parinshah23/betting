@@ -154,3 +154,42 @@ export interface ApiErrorResponse {
 }
 
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
+
+// Winner Types
+export interface Winner {
+  id: string;
+  competitionId: string;
+  userId: string;
+  ticketNumber: number;
+  prizeValue: number;
+  wonAt: string;
+  claimed: boolean;
+  claimDate?: string;
+  prizeType?: 'physical' | 'cash' | 'voucher';
+  deliveryStatus?: 'pending' | 'processing' | 'shipped' | 'delivered';
+  trackingNumber?: string;
+  claimAddress?: string;
+  competition: {
+    id: string;
+    title: string;
+    slug: string;
+    prizeValue: number;
+    imageUrl?: string;
+  };
+}
+
+// Promo Code Types
+export interface PromoCode {
+  id: string;
+  code: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  minOrderValue: number;
+  maxUses: number | null;
+  currentUses: number;
+  isActive: boolean;
+  validFrom?: string;
+  validUntil?: string;
+  createdAt: string;
+}
+

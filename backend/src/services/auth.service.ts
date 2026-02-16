@@ -4,14 +4,7 @@ import { emailService } from './email.service';
 import { hashPassword, comparePassword } from '../utils/password';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 
-// In-memory store for password reset tokens (in production, use Redis or database)
-interface PasswordResetToken {
-  userId: string;
-  tokenHash: string;
-  expiresAt: Date;
-}
-
-const passwordResetTokens = new Map<string, PasswordResetToken>();
+import passwordResetModel from '../models/password-reset.model';
 
 export const authService = {
   /**
@@ -30,7 +23,7 @@ export const authService = {
     }
 
     const passwordHash = await hashPassword(data.password);
-    
+
     // Create user
     const user = await userModel.create({
       email: data.email,
@@ -40,10 +33,15 @@ export const authService = {
       phone: data.phone,
     });
 
-    // Create wallet for user (Phase 1 migration 007 created wallets table)
-    // We'll add this to a wallet model later, but for now just direct query
-    // import pool from '../config/database'; // If needed
-    
+    // Create wallet for new user
+    const { walletModel } = require('../models/wallet.model');
+    try {
+      await walletModel.create(user.id);
+    } catch (walletError) {
+      console.error('Failed to create wallet for new user:', walletError);
+      // Don't fail registration if wallet creation fails
+    }
+
     return {
       id: user.id,
       email: user.email,
@@ -107,7 +105,7 @@ export const authService = {
   async refreshToken(refreshToken: string) {
     try {
       const decoded = verifyRefreshToken(refreshToken);
-      
+
       // Verify user still exists and is not banned
       const user = await userModel.findById(decoded.userId);
       if (!user) {
@@ -143,7 +141,7 @@ export const authService = {
    */
   async forgotPassword(email: string) {
     const user = await userModel.findByEmail(email);
-    
+
     // Don't reveal if email exists or not for security
     if (!user) {
       return;
@@ -152,17 +150,13 @@ export const authService = {
     // Generate secure random token
     const token = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-    
+
     // Token expires in 1 hour
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
 
-    // Store token hash (not the raw token)
-    passwordResetTokens.set(tokenHash, {
-      userId: user.id,
-      tokenHash,
-      expiresAt,
-    });
+    // Store token in database (persists across restarts)
+    await passwordResetModel.createToken(user.id, token, expiresAt);
 
     // Send password reset email
     await emailService.sendPasswordResetEmail(user.email, user.first_name, token);
@@ -172,26 +166,19 @@ export const authService = {
    * Reset password using token.
    */
   async resetPassword(token: string, newPassword: string) {
-    // Hash the provided token to compare with stored hash
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-    
-    const resetData = passwordResetTokens.get(tokenHash);
-    
+    // Look up token in database
+    const resetData = await passwordResetModel.findByToken(token);
+
     if (!resetData) {
       throw new Error('Invalid or expired reset token');
-    }
-
-    if (new Date() > resetData.expiresAt) {
-      passwordResetTokens.delete(tokenHash);
-      throw new Error('Reset token has expired');
     }
 
     // Update password
     const passwordHash = await hashPassword(newPassword);
     await userModel.updatePassword(resetData.userId, passwordHash);
 
-    // Remove used token
-    passwordResetTokens.delete(tokenHash);
+    // Mark token as used
+    await passwordResetModel.markAsUsed(token);
 
     // Revoke all refresh tokens for security
     await userModel.revokeRefreshTokens(resetData.userId);

@@ -26,13 +26,33 @@ import {
 import { formatDate, cn } from '@/lib/utils';
 import useSWR from 'swr';
 
-interface ProfileData {
-  user: User;
+// Backend returns snake_case, frontend expects camelCase
+interface BackendProfile {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  role: 'user' | 'admin';
+  email_verified: boolean;
+  created_at: string;
 }
 
-const fetcher = (url: string) => api.get<ProfileData>(url).then(res => {
+const fetcher = (url: string) => api.get<BackendProfile>(url).then(res => {
   if (res.success && res.data) {
-    return res.data;
+    // Map snake_case to camelCase
+    return {
+      user: {
+        id: res.data.id,
+        email: res.data.email,
+        firstName: res.data.first_name,
+        lastName: res.data.last_name,
+        phone: res.data.phone,
+        role: res.data.role,
+        emailVerified: res.data.email_verified,
+        createdAt: res.data.created_at,
+      } as User,
+    };
   }
   throw new Error('Failed to fetch profile');
 });
@@ -65,7 +85,7 @@ export default function ProfilePage() {
   });
 
   const { data: profileData, error, isLoading, mutate } = useSWR(
-    '/api/users/profile',
+    '/users/profile',
     fetcher
   );
 
@@ -86,11 +106,29 @@ export default function ProfilePage() {
     setMessage(null);
 
     try {
-      const response = await api.put<{ user: User }>('/api/users/profile', formData);
+      // Map camelCase to snake_case for backend
+      const requestData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone: formData.phone,
+      };
+
+      const response = await api.put<BackendProfile>('/users/profile', requestData);
 
       if (response.success && response.data) {
         await mutate();
-        updateUserProfile(response.data.user);
+        // Map response back to camelCase
+        const updatedUser: User = {
+          id: response.data.id,
+          email: response.data.email,
+          firstName: response.data.first_name,
+          lastName: response.data.last_name,
+          phone: response.data.phone,
+          role: response.data.role,
+          emailVerified: response.data.email_verified,
+          createdAt: response.data.created_at,
+        };
+        updateUserProfile(updatedUser);
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
         setIsEditing(false);
       } else {
@@ -118,7 +156,7 @@ export default function ProfilePage() {
     setMessage(null);
 
     try {
-      const response = await api.put('/api/users/password', {
+      const response = await api.put('/users/password', {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });

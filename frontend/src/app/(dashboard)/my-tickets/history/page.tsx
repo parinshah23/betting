@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { api } from '@/lib/api';
-import { Competition, Order } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
@@ -14,24 +14,35 @@ import {
   ArrowRight,
   Search,
   Package,
-  Wallet
+  Trophy
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import useSWR from 'swr';
 
-interface TicketHistoryItem {
-  id: string;
-  ticketNumber: number;
-  ticketCount: number;
-  competition: Competition;
-  order: Order;
-  purchasedAt: string;
+// New order-grouped interface matching backend response
+interface TicketHistoryOrder {
+  orderNumber: string;
   totalPrice: number;
+  purchaseDate: string;
+  tickets: Array<{
+    competition: {
+      id: string;
+      title: string;
+      slug: string;
+      image: string;
+    };
+    ticketNumber: number;
+    isWinner: boolean;
+  }>;
 }
 
-const fetcher = (url: string) => api.get<{ history: TicketHistoryItem[] }>(url).then(res => {
+interface TicketHistoryResponse {
+  orders: TicketHistoryOrder[];
+}
+
+const fetcher = (url: string) => api.get<TicketHistoryResponse>(url).then(res => {
   if (res.success && res.data) {
-    return res.data.history;
+    return res.data.orders || [];
   }
   throw new Error('Failed to fetch history');
 });
@@ -39,30 +50,25 @@ const fetcher = (url: string) => api.get<{ history: TicketHistoryItem[] }>(url).
 export default function TicketHistoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: history, error, isLoading } = useSWR(
-    '/api/tickets/history',
+  const { data: orders, error, isLoading } = useSWR(
+    '/tickets/history',
     fetcher,
     {
-      refreshInterval: 60000, // Refresh every minute
+      refreshInterval: 60000,
     }
   );
 
-  // Filter history
-  const filteredHistory = history?.filter(item =>
-    item.competition.title.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter orders by competition title
+  const filteredOrders = orders?.filter(order =>
+    order.tickets.some(ticket =>
+      ticket.competition.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
   );
 
-  // Group by date
-  const groupedByDate = filteredHistory?.reduce((acc, item) => {
-    const date = new Date(item.purchasedAt).toLocaleDateString('en-GB', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(item);
-    return acc;
-  }, {} as Record<string, TicketHistoryItem[]>);
+  // Stats
+  const totalOrders = orders?.length || 0;
+  const totalTickets = orders?.reduce((acc, order) => acc + order.tickets.length, 0) || 0;
+  const totalSpent = orders?.reduce((acc, order) => acc + order.totalPrice, 0) || 0;
 
   if (isLoading) {
     return (
@@ -103,6 +109,22 @@ export default function TicketHistoryPage() {
         </Link>
       </div>
 
+      {/* Summary Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+          <p className="text-2xl font-bold text-gray-900">{totalOrders}</p>
+          <p className="text-sm text-gray-500">Orders</p>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+          <p className="text-2xl font-bold text-gray-900">{totalTickets}</p>
+          <p className="text-sm text-gray-500">Tickets</p>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+          <p className="text-2xl font-bold text-primary-600">{formatCurrency(totalSpent)}</p>
+          <p className="text-sm text-gray-500">Total Spent</p>
+        </div>
+      </div>
+
       {/* Search */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="relative">
@@ -117,18 +139,87 @@ export default function TicketHistoryPage() {
         </div>
       </div>
 
-      {/* History List */}
-      {groupedByDate && Object.keys(groupedByDate).length > 0 ? (
-        <div className="space-y-8">
-          {Object.entries(groupedByDate).map(([date, items]) => (
-            <div key={date} className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                {date}
-              </h3>
-              <div className="space-y-3">
-                {items.map((item) => (
-                  <HistoryItemCard key={item.id} item={item} />
+      {/* History List - Grouped by Order */}
+      {filteredOrders && filteredOrders.length > 0 ? (
+        <div className="space-y-4">
+          {filteredOrders.map((order) => (
+            <div key={order.orderNumber} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              {/* Order Header */}
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-5 bg-gray-50 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center">
+                    <Package className="w-4 h-4 text-primary-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Order #{order.orderNumber}</h3>
+                    <p className="text-sm text-gray-500 flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {new Date(order.purchaseDate).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge variant="success">Paid</Badge>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500">Total</p>
+                    <p className="text-lg font-bold text-primary-600">
+                      {formatCurrency(order.totalPrice)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tickets in this order */}
+              <div className="divide-y divide-gray-100">
+                {order.tickets.map((ticket, idx) => (
+                  <div
+                    key={`${order.orderNumber}-${ticket.ticketNumber}-${idx}`}
+                    className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    {/* Competition Image */}
+                    <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {ticket.competition.image ? (
+                        <Image
+                          src={ticket.competition.image}
+                          alt={ticket.competition.title}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <TicketIcon className="w-6 h-6 text-gray-300" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Ticket Info */}
+                    <div className="flex-1 min-w-0">
+                      <Link
+                        href={`/competitions/${ticket.competition.slug}`}
+                        className="font-medium text-gray-900 hover:text-primary-600 transition-colors truncate block"
+                      >
+                        {ticket.competition.title}
+                      </Link>
+                      <p className="text-sm text-gray-500 flex items-center gap-1">
+                        <TicketIcon className="w-3.5 h-3.5" />
+                        Ticket #{ticket.ticketNumber.toString().padStart(6, '0')}
+                      </p>
+                    </div>
+
+                    {/* Winner Badge */}
+                    {ticket.isWinner && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
+                        <Trophy className="w-3.5 h-3.5" />
+                        Winner! 🎉
+                      </span>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -154,77 +245,6 @@ export default function TicketHistoryPage() {
           </Link>
         </div>
       )}
-    </div>
-  );
-}
-
-interface HistoryItemCardProps {
-  item: TicketHistoryItem;
-}
-
-function HistoryItemCard({ item }: HistoryItemCardProps) {
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <Link
-                href={`/competitions/${item.competition.slug}`}
-                className="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
-              >
-                {item.competition.title}
-              </Link>
-              <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-500">
-                <span className="flex items-center gap-1">
-                  <Package className="w-4 h-4" />
-                  Order #{item.order.orderNumber}
-                </span>
-                <span className="flex items-center gap-1">
-                  <TicketIcon className="w-4 h-4" />
-                  {item.ticketCount} ticket{item.ticketCount > 1 ? 's' : ''}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Wallet className="w-4 h-4" />
-                  {formatCurrency(item.totalPrice)}
-                </span>
-              </div>
-            </div>
-            <Badge
-              variant={item.order.status === 'paid' ? 'success' :
-                item.order.status === 'refunded' ? 'info' : 'default'}
-            >
-              {item.order.status.charAt(0).toUpperCase() + item.order.status.slice(1)}
-            </Badge>
-          </div>
-
-          {/* Ticket Numbers */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {Array.from({ length: Math.min(item.ticketCount, 5) }).map((_, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center px-2 py-1 bg-primary-50 text-primary-700 rounded text-xs font-mono"
-              >
-                #{(item.ticketNumber + i).toString().padStart(6, '0')}
-              </span>
-            ))}
-            {item.ticketCount > 5 && (
-              <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-                +{item.ticketCount - 5} more
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 sm:flex-col sm:items-end">
-          <Link
-            href={`/competitions/${item.competition.slug}`}
-            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-          >
-            View Competition
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }

@@ -20,13 +20,50 @@ import {
 import { formatDistanceToNow } from '@/lib/utils';
 import useSWR from 'swr';
 
+// Backend returns snake_case fields, we need to map to camelCase
+interface BackendTicket {
+  id: string;
+  competition_id: string;
+  user_id: string;
+  ticket_number: number;
+  is_instant_win: boolean;
+  instant_win_prize?: string;
+  purchased_at: string;
+  competition: {
+    id: string;
+    title: string;
+    slug: string;
+    prize_value?: number;
+    status: 'draft' | 'live' | 'ended' | 'completed' | 'cancelled';
+    draw_date?: string | null;
+  };
+}
+
 interface TicketWithCompetition extends Ticket {
   competition: Competition;
 }
 
-const fetcher = (url: string) => api.get<{ tickets: TicketWithCompetition[] }>(url).then(res => {
+const fetcher = (url: string) => api.get<BackendTicket[]>(url).then(res => {
   if (res.success && res.data) {
-    return res.data.tickets;
+    // Map snake_case to camelCase
+    return res.data.map((ticket): TicketWithCompetition => ({
+      id: ticket.id,
+      competitionId: ticket.competition_id,
+      userId: ticket.user_id,
+      ticketNumber: ticket.ticket_number,
+      isInstantWin: ticket.is_instant_win,
+      instantWinPrize: ticket.instant_win_prize,
+      purchasedAt: ticket.purchased_at,
+      competition: {
+        id: ticket.competition.id,
+        title: ticket.competition.title,
+        slug: ticket.competition.slug,
+        description: '',
+        prize_value: ticket.competition.prize_value,
+        status: ticket.competition.status,
+        draw_date: ticket.competition.draw_date,
+      } as Competition,
+    }));
   }
   throw new Error('Failed to fetch tickets');
 });
@@ -36,7 +73,7 @@ export default function MyTicketsPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'ended'>('all');
 
   const { data: tickets, error, isLoading } = useSWR(
-    '/api/tickets/my-tickets',
+    '/tickets/my-tickets',
     fetcher,
     {
       refreshInterval: 30000, // Refresh every 30 seconds

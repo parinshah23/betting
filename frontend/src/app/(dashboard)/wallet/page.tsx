@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { api } from '@/lib/api';
-import { Wallet as WalletType, WalletTransaction } from '@/types';
+import { WalletTransaction } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
@@ -21,17 +21,45 @@ import {
 } from 'lucide-react';
 import { formatDate, formatCurrency, cn, formatDistanceToNow } from '@/lib/utils';
 import useSWR from 'swr';
+import toast from 'react-hot-toast';
 
-interface WalletData {
-  wallet: WalletType;
-  transactions: WalletTransaction[];
+// Backend returns snake_case, frontend expects camelCase
+interface BackendWallet {
+  id: string;
+  balance: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
-const fetcher = (url: string) => api.get<WalletData>(url).then(res => {
+interface BackendTransaction {
+  id: string;
+  type: 'deposit' | 'spend' | 'cashback' | 'refund' | 'admin_credit' | 'admin_debit';
+  amount: number;
+  balance_after: number;
+  description: string;
+  created_at: string;
+}
+
+const walletFetcher = (url: string) => api.get<BackendWallet>(url).then(res => {
   if (res.success && res.data) {
     return res.data;
   }
   throw new Error('Failed to fetch wallet');
+});
+
+const transactionsFetcher = (url: string) => api.get<BackendTransaction[]>(url).then(res => {
+  if (res.success && res.data) {
+    // Map snake_case to camelCase
+    return res.data.map(t => ({
+      id: t.id,
+      type: t.type,
+      amount: t.amount,
+      balanceAfter: t.balance_after,
+      description: t.description,
+      createdAt: t.created_at,
+    })) as WalletTransaction[];
+  }
+  throw new Error('Failed to fetch transactions');
 });
 
 const DEPOSIT_AMOUNTS = [10, 20, 50, 100, 200, 500];
@@ -42,54 +70,113 @@ export default function WalletPage() {
   const [isDepositing, setIsDepositing] = useState(false);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
 
-  const { data: walletData, error, isLoading, mutate } = useSWR(
-    '/api/wallet',
-    fetcher,
+  const { data: wallet, error: walletError, isLoading: walletLoading, mutate: mutateWallet } = useSWR(
+    '/wallet',
+    walletFetcher,
     {
       refreshInterval: 30000,
     }
   );
 
+  const { data: transactions, error: transactionsError, isLoading: transactionsLoading, mutate: mutateTransactions } = useSWR(
+    '/wallet/transactions',
+    transactionsFetcher,
+    {
+      refreshInterval: 30000,
+    }
+  );
+
+  const isLoading = walletLoading || transactionsLoading;
+  const error = walletError || transactionsError;
+
+  const mutate = () => {
+    mutateWallet();
+    mutateTransactions();
+  };
+
   const handleDeposit = async () => {
     const amount = selectedAmount || parseFloat(customAmount);
-    if (!amount || amount <= 0) return;
+
+    if (!amount || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    if (amount > 10000) {
+      toast.error('Maximum deposit amount is £10,000');
+      return;
+    }
 
     setIsDepositing(true);
+
     try {
-      const response = await api.post<{ clientSecret: string }>('/api/wallet/deposit', {
+      const response = await api.post<{ clientSecret: string; publishableKey: string }>('/wallet/deposit', {
         amount,
       });
 
       if (response.success && response.data) {
-        // Redirect to Stripe checkout or handle payment
-        // For now, we'll just refresh the wallet data
-        await mutate();
-        setSelectedAmount(null);
-        setCustomAmount('');
+        const { clientSecret, publishableKey } = response.data;
+
+        const { loadStripe } = await import('@stripe/stripe-js');
+        const stripe = await loadStripe(
+          publishableKey || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
+        );
+
+        if (!stripe) {
+          toast.error('Payment system failed to load. Please try again.');
+          return;
+        }
+
+        // Use Stripe's confirmCardPayment with redirect
+        // For a simpler flow, we redirect to a payment confirmation page
+        toast.success('Payment initiated! Redirecting to payment...');
+
+        // Redirect to Stripe's hosted payment page
+        const { error: confirmError } = await stripe.confirmPayment({
+          clientSecret,
+          confirmParams: {
+            return_url: `${window.location.origin}/wallet?deposit=success`,
+          },
+        });
+
+        if (confirmError) {
+          // Will only reach here if there's an immediate error
+          // (e.g., if the PaymentIntent is already confirmed)
+          toast.error(confirmError.message || 'Payment failed. Please try again.');
+        } else {
+          // User will not reach here - they'll be redirected
+          toast.success('Deposit successful! Your wallet has been credited.');
+          await mutate();
+          setSelectedAmount(null);
+          setCustomAmount('');
+        }
+      } else {
+        toast.error(response.error?.message || 'Failed to initiate deposit');
       }
-    } catch (error) {
-      console.error('Deposit failed:', error);
+    } catch (err) {
+      console.error('Deposit failed:', err);
+      toast.error('Deposit failed. Please try again.');
     } finally {
       setIsDepositing(false);
     }
   };
 
   // Calculate stats
-  const totalDeposited = walletData?.transactions
-    .filter(t => t.type === 'deposit')
-    .reduce((acc, t) => acc + t.amount, 0) || 0;
+  const totalDeposited = transactions
+    ?.filter((t: WalletTransaction) => t.type === 'deposit')
+    .reduce((acc: number, t: WalletTransaction) => acc + t.amount, 0) || 0;
 
-  const totalSpent = walletData?.transactions
-    .filter(t => t.type === 'spend')
-    .reduce((acc, t) => acc + Math.abs(t.amount), 0) || 0;
+  const totalSpent = transactions
+    ?.filter((t: WalletTransaction) => t.type === 'spend')
+    .reduce((acc: number, t: WalletTransaction) => acc + Math.abs(t.amount), 0) || 0;
 
-  const totalCashback = walletData?.transactions
-    .filter(t => t.type === 'cashback')
-    .reduce((acc, t) => acc + t.amount, 0) || 0;
+  const totalCashback = transactions
+    ?.filter((t: WalletTransaction) => t.type === 'cashback')
+    .reduce((acc: number, t: WalletTransaction) => acc + t.amount, 0) || 0;
 
   const displayedTransactions = showAllTransactions
-    ? walletData?.transactions
-    : walletData?.transactions.slice(0, 5);
+    ? transactions
+    : transactions?.slice(0, 5);
 
   if (isLoading) {
     return (
@@ -127,7 +214,7 @@ export default function WalletPage() {
           <div>
             <p className="text-primary-100 text-sm font-medium mb-1">Available Balance</p>
             <p className="text-4xl md:text-5xl font-bold">
-              {formatCurrency(walletData?.wallet.balance || 0)}
+              {formatCurrency(wallet?.balance || 0)}
             </p>
             <p className="text-primary-200 text-sm mt-2">
               Last updated {formatDistanceToNow(new Date().toISOString())}
@@ -297,7 +384,7 @@ export default function WalletPage() {
               <History className="w-5 h-5" />
               Transaction History
             </h2>
-            {walletData && walletData.transactions.length > 5 && (
+            {transactions && transactions.length > 5 && (
               <button
                 onClick={() => setShowAllTransactions(!showAllTransactions)}
                 className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"

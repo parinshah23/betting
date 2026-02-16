@@ -1,86 +1,180 @@
-# 🧪 Client Testing Guide: Premium Competition Platform
+# 🎯 Client Testing Guide - Gambling Web Platform
 
-**Objective:** Verify that the website features work correctly from a user and admin perspective.
+## 📋 Overview
 
----
-
-## 🔑 1. Test Accounts & Credentials
-
-### **Admin Account**
-Use this account to access the dashboard and manage competitions.
-- **URL:** `/admin` (e.g., `https://your-site.com/admin`)
-- **Email:** `admin@example.com`
-- **Password:** `admin123`
-
-### **Payment Test Cards (Stripe)**
-When making a purchase, use these details to simulate a successful payment. **Do not use a real credit card.**
-- **Card Number:** `4242 4242 4242 4242`
-- **Expiry:** Any future date (e.g., `12/28`)
-- **CVC:** `123`
-- **Zip Code:** `12345`
+This guide will help you test all features of the gambling/raffle competition platform. Follow each section step-by-step to verify everything works correctly.
 
 ---
 
-## 📝 2. Testing Scenarios
+## ⚙️ Prerequisites (Already Done)
 
-Please go through these steps in order.
-
-### ✅ Scenario A: New User Registration
-1.  Open the website in a **Incognito/Private** window.
-2.  Click **"Register"** in the top right.
-3.  Fill in the form with a test email (e.g., `testuser1@example.com`).
-4.  Click **"Create Account"**.
-5.  **Verify:**
-    *   You are redirected to the Login page or Dashboard.
-    *   You receive a "Welcome" email (if email service is active).
-
-### ✅ Scenario B: User Login
-1.  Click **"Login"**.
-2.  Enter the email and password you just created.
-3.  Click **"Sign In"**.
-4.  **Verify:**
-    *   You are logged in successfully.
-    *   Your name appears in the top navigation.
-
-### ✅ Scenario C: Purchasing a Ticket (The "Money" Flow)
-1.  Go to the **"Competitions"** page.
-2.  Click on any active competition (e.g., "Win a Tesla").
-3.  Select **3 Tickets** (or any amount).
-4.  Answer the skill question correctly (if asked).
-5.  Click **"Enter Now"** or **"Add to Cart"**.
-6.  Go to **Cart** and click **"Checkout"**.
-7.  **Payment Page:**
-    *   Enter the **Test Card Details** (from Section 1 above).
-    *   Click **"Pay Now"**.
-8.  **Verify:**
-    *   Payment succeeds.
-    *   You are redirected to a "**Order Confirmed**" page.
-    *   You receive an "Order Confirmation" email.
-    *   Go to **"My Area"** -> **"My Tickets"** to see your new ticket numbers.
-
-### ✅ Scenario D: Admin Management
-1.  **Log out** of the test user account.
-2.  **Login** using the **Admin Credentials** (from Section 1).
-3.  You should see the **Admin Dashboard**.
-4.  **Test: Create Competition**
-    *   Go to "Competitions" -> "Create New".
-    *   Upload an image (tests Cloudinary).
-    *   Set a price and end date.
-    *   Save.
-    *   **Verify:** The new competition appears on the public homepage.
-5.  **Test: View Orders**
-    *   Go to "Orders".
-    *   **Verify:** You can see the order you just made in Scenario C.
+- ✅ Database seeded with test data
+- ✅ Backend running on `http://localhost:5001`
+- ✅ Frontend running on `http://localhost:3000`
 
 ---
 
-## ❓ FAQ / Troubleshooting
+## 🔑 Test Accounts
 
-**Q: Payment failed?**
-A: Ensure you used the `4242...` test card numbers. Real cards will be rejected in Test Mode.
+All test accounts use the same password: **`Admin123!`**
 
-**Q: I didn't get an email?**
-A: Check your Spam folder. If using a free testing server, email delivery might be delayed.
+| Email | Role | Has Data |
+|-------|------|----------|
+| `admin@test.com` | Admin | Admin access |
+| `user1@test.com` | User | Has tickets + 1 win (Rolex) |
+| `user2@test.com` | User | Has tickets |
 
-**Q: Images aren't uploading?**
-A: Ensure file size is under 5MB and is a valid image (JPG/PNG).
+---
+
+## 🧪 Test Scenarios
+
+### ✅ TEST 1: Browse Competitions (No Login Required)
+
+**Steps:**
+1. Open browser: `http://localhost:3000`
+2. Navigate to "Competitions"
+3. Should see **3 competitions**
+
+**Expected Results:**
+- ✅ Tesla Model 3 (£40,000)
+- ✅ iPhone 16 Pro Max (£1,200)
+- ✅ Rolex Submariner (£8,000)
+- ✅ Images, prices, ticket counts visible
+
+---
+
+### ✅ TEST 2: User Login
+
+**Steps:**
+1. Click "Login"
+2. Email: `user1@test.com`
+3. Password: `Admin123!`
+
+**Expected Results:**
+- ✅ Login successful
+- ✅ Redirected to dashboard
+- ✅ Navigation shows profile menu
+
+---
+
+### ✅ TEST 3: Purchase Tickets with Promo Code
+
+**Steps:**
+1. Login as any user
+2. Select Tesla competition
+3. Add 5 tickets (£25)
+4. Apply promo: `WELCOME10`
+5. Total should be: £22.50
+6. Use Stripe test card: `4242 4242 4242 4242`
+
+**Expected Results:**
+- ✅ Promo code accepted
+- ✅ 10% discount applied
+- ✅ Payment successful
+- ✅ Tickets in "My Tickets"
+
+---
+
+### ✅ TEST 4: View Ticket History
+
+**Steps:**
+1. Login as `user1@test.com`
+2. Go to "My Tickets" > "History"
+
+**Expected Results:**
+- ✅ Shows orders grouped
+- ✅ Order numbers visible (e.g., ORD-20260215-001)
+- ✅ Total prices correct (e.g., £25.00)
+- ✅ Purchase dates shown
+- ✅ Tickets listed under each order
+
+---
+
+### ✅ TEST 5: Claim Prize & Certificate
+
+**Steps:**
+1. Login as `user1@test.com`
+2. Go to "My Wins"
+3. Should see **Rolex win**
+4. Click "Claim Prize"
+5. Enter delivery address
+6. Submit claim
+7. Click "Download Certificate"
+
+**Expected Results:**
+- ✅ Win shows with £8,000 prize
+- ✅ Claim button works
+- ✅ Address modal appears
+- ✅ Status updates to "Claimed"
+- ✅ PDF certificate downloads
+- ✅ PDF shows winner details
+
+---
+
+### ✅ TEST 6: Wallet Deposit
+
+**Steps:**
+1. Go to "Wallet"
+2. Enter amount: £50
+3. Click "Deposit"
+4. Complete Stripe payment
+
+**Expected Results:**
+- ✅ Stripe form appears
+- ✅ Payment successful
+- ✅ Balance updates
+- ✅ Transaction in history
+
+---
+
+## 🔍 Quick Database Verification
+
+If nothing shows, check database:
+
+```bash
+# Check competitions
+psql postgresql://raffle_user:password@localhost:5432/raffle_db -c "SELECT title, status FROM competitions;"
+
+# Check users
+psql postgresql://raffle_user:password@localhost:5432/raffle_db -c "SELECT email FROM users WHERE email LIKE '%@test.com';"
+
+# Check tickets for user1
+psql postgresql://raffle_user:password@localhost:5432/raffle_db -c "SELECT COUNT(*) FROM tickets WHERE user_id = (SELECT id FROM users WHERE email = 'user1@test.com');"
+```
+
+---
+
+## 🐛 Common Issues
+
+### "No competitions showing"
+- Check backend running: `curl http://localhost:5001/api/health`
+- Check browser console (F12) for errors
+
+### "Promo code not working"
+- Check promo_codes table has data
+- Check backend using database (not hardcoded)
+
+### "Order total shows £0.00"
+- Backend not returning order data correctly
+- Check ticket.controller.ts getHistory method
+
+### "Claim Prize does nothing"
+- Frontend handler missing
+- Check my-wins/page.tsx has handleClaimPrize
+
+---
+
+## ✅ Test Checklist
+
+- [x] Competitions display
+- [x] Login works
+- [ ] Purchase tickets
+- [ ] Promo codes work
+- [x] Ticket history shows orders
+- [x] Claim prize works
+- [x] Download certificate works
+- [ ] Wallet deposit works
+
+---
+
+**All tests passing? Platform is ready!** 🎉

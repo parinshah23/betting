@@ -18,10 +18,13 @@ export function calculateProgress(sold: number, total: number): number {
 }
 
 export function formatDistanceToNow(date: string | Date): string {
+  if (!date) return 'recently';
   const now = new Date();
   const then = new Date(date);
+  if (isNaN(then.getTime())) return 'recently';
+
   const seconds = Math.floor((now.getTime() - then.getTime()) / 1000);
-  
+
   if (seconds < 60) return 'just now';
   if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
@@ -32,7 +35,10 @@ export function formatDistanceToNow(date: string | Date): string {
 }
 
 export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOptions): string {
+  if (!date) return 'N/A';
   const d = new Date(date);
+  if (isNaN(d.getTime())) return 'N/A';
+
   const defaultOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'short',
