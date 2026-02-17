@@ -4,7 +4,6 @@ export function validateEnv(): void {
         'JWT_SECRET',
         'REFRESH_TOKEN_SECRET',
         'STRIPE_SECRET_KEY',
-        'STRIPE_WEBHOOK_SECRET',
         'EMAIL_PROVIDER',
         'EMAIL_FROM',
         'FRONTEND_URL'
