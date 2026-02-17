@@ -2,11 +2,11 @@
   "name": "raffle-backend",
   "version": "0.1.0",
   "private": true,
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "lint": "eslint src/**/*.ts",
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/seed.js",
