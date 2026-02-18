@@ -70,17 +70,19 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
 
-    // Check against configured URL
-    const allowed = config.frontendUrl;
+    // Build list of allowed origins from CORS_ORIGIN (comma-separated) or FRONTEND_URL
+    const rawAllowed = process.env.CORS_ORIGIN || config.frontendUrl;
+    const allowedOrigins = rawAllowed
+      .split(',')
+      .map((u) => u.trim().replace(/\/$/, ''))
+      .filter(Boolean);
 
-    // Strip trailing slashes for comparison
     const cleanOrigin = origin.replace(/\/$/, '');
-    const cleanAllowed = allowed.replace(/\/$/, '');
 
-    if (cleanOrigin === cleanAllowed || process.env.NODE_ENV === 'development') {
+    if (allowedOrigins.includes(cleanOrigin) || process.env.NODE_ENV === 'development') {
       return callback(null, true);
     } else {
-      console.warn(`[CORS] Blocked request from: ${origin}. Expected: ${allowed}`);
+      console.warn(`[CORS] Blocked request from: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
       return callback(new Error('Not allowed by CORS'));
     }
   },

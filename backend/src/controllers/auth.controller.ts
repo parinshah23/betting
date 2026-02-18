@@ -8,10 +8,12 @@ import { ConflictError, UnauthorizedError } from '../middleware/errorHandler';
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await authService.register(req.body);
-    
-    // Send welcome email
-    await emailService.sendWelcomeEmail(user.email, user.first_name);
-    
+
+    // Send welcome email (non-blocking — don't fail registration if email fails)
+    emailService.sendWelcomeEmail(user.email, user.first_name).catch(err =>
+      console.error('Failed to send welcome email:', err)
+    );
+
     sendSuccess(res, { data: user, message: 'User registered successfully' }, 201);
   } catch (error) {
     if (error instanceof Error && error.message === 'Email already in use') {
