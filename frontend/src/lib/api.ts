@@ -2,7 +2,7 @@
  * API Client
  *
  * Centralized fetch wrapper for all API calls.
- * Handles authentication, error formatting, and response parsing.
+ * Handles authentication, error formatting, token refresh, and response parsing.
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -24,10 +24,12 @@ interface ApiResponse<T> {
 }
 
 const TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 
 class ApiClient {
   private baseUrl: string;
   private accessToken: string | null = null;
+  private isRefreshing = false;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -48,13 +50,74 @@ class ApiClient {
     }
   }
 
+  setRefreshToken(token: string | null) {
+    if (typeof window !== 'undefined') {
+      if (token) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, token);
+      } else {
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
+      }
+    }
+  }
+
+  getRefreshToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(REFRESH_TOKEN_KEY);
+    }
+    return null;
+  }
+
   getAccessToken(): string | null {
     return this.accessToken;
   }
 
+  clearTokens() {
+    this.setAccessToken(null);
+    this.setRefreshToken(null);
+  }
+
+  private async tryRefreshToken(): Promise<boolean> {
+    if (this.isRefreshing) return false;
+
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) return false;
+
+    this.isRefreshing = true;
+    try {
+      const response = await fetch(`${this.baseUrl}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) {
+        this.clearTokens();
+        return false;
+      }
+
+      const data = await response.json();
+      if (data.success && data.data?.tokens?.accessToken) {
+        this.setAccessToken(data.data.tokens.accessToken);
+        if (data.data.tokens.refreshToken) {
+          this.setRefreshToken(data.data.tokens.refreshToken);
+        }
+        return true;
+      }
+
+      this.clearTokens();
+      return false;
+    } catch {
+      this.clearTokens();
+      return false;
+    } finally {
+      this.isRefreshing = false;
+    }
+  }
+
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    isRetry = false
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -80,8 +143,21 @@ class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
-        credentials: 'include', // For cookies (refresh token)
+        credentials: 'include',
       });
+
+      // On 401, try to refresh the access token once, then retry
+      if (response.status === 401 && !isRetry && !endpoint.includes('/auth/')) {
+        const refreshed = await this.tryRefreshToken();
+        if (refreshed) {
+          return this.request<T>(endpoint, options, true);
+        }
+        // Refresh failed — return 401 so AuthContext can handle logout
+        return {
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'Session expired. Please log in again.' },
+        };
+      }
 
       const data = await response.json();
 
@@ -96,7 +172,7 @@ class ApiClient {
       }
 
       return data;
-    } catch (error) {
+    } catch {
       return {
         success: false,
         error: {

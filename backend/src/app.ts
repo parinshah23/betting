@@ -31,9 +31,6 @@ if (process.env.SENTRY_DSN) {
     ],
   });
 
-  // Sentry request handler must be the first middleware
-  app.use(Sentry.expressErrorHandler());
-
   console.log('✅ Sentry error tracking initialized');
 }
 

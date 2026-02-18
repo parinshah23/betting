@@ -82,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await api.post<{ user: User; tokens: { accessToken: string; refreshToken: string } }>('/auth/login', credentials);
       if (response.success && response.data) {
         api.setAccessToken(response.data.tokens.accessToken);
+        api.setRefreshToken(response.data.tokens.refreshToken);
         setState({
           user: response.data.user,
           isLoading: false,
@@ -149,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Ignore logout errors
     } finally {
-      api.setAccessToken(null);
+      api.clearTokens();
       setState({
         user: null,
         isLoading: false,
