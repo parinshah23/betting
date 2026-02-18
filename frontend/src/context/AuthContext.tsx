@@ -33,6 +33,21 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// Map snake_case backend response to camelCase User type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapUser(raw: any): User {
+  return {
+    id: raw.id,
+    email: raw.email,
+    firstName: raw.firstName ?? raw.first_name ?? '',
+    lastName: raw.lastName ?? raw.last_name ?? '',
+    phone: raw.phone,
+    role: raw.role,
+    emailVerified: raw.emailVerified ?? raw.email_verified ?? false,
+    createdAt: raw.createdAt ?? raw.created_at ?? '',
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -47,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.data) {
         setState((prev) => ({
           ...prev,
-          user: response.data as User,
+          user: mapUser(response.data),
           isLoading: false,
           isAuthenticated: true,
           error: null,
@@ -84,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         api.setAccessToken(response.data.tokens.accessToken);
         api.setRefreshToken(response.data.tokens.refreshToken);
         setState({
-          user: response.data.user,
+          user: mapUser(response.data.user),
           isLoading: false,
           isAuthenticated: true,
           error: null,
@@ -165,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await api.put<User>('/users/profile', data);
       if (response.success && response.data) {
-        setState((prev) => ({ ...prev, user: response.data as User }));
+        setState((prev) => ({ ...prev, user: mapUser(response.data) }));
         return true;
       } else {
         setState((prev) => ({

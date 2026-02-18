@@ -147,7 +147,12 @@ class ApiClient {
       });
 
       // On 401, try to refresh the access token once, then retry
-      if (response.status === 401 && !isRetry && !endpoint.includes('/auth/')) {
+      // Exclude only login/register/logout/refresh endpoints to avoid loops,
+      // but allow /auth/me to refresh since it's used to check session on load
+      const isPublicAuthEndpoint = ['/auth/login', '/auth/register', '/auth/logout', '/auth/refresh'].some(
+        (e) => endpoint.startsWith(e)
+      );
+      if (response.status === 401 && !isRetry && !isPublicAuthEndpoint) {
         const refreshed = await this.tryRefreshToken();
         if (refreshed) {
           return this.request<T>(endpoint, options, true);

@@ -1,4 +1,4 @@
-# 🚀 Complete Deployment Plan - Gambling Web Platform (Free Tier)
+# 🚀 Complete Deployment Plan - PremiumCompitions Platform (Free Tier)
 
 ## 📋 Table of Contents
 1. [Platform Selection & Why](#platform-selection)
@@ -283,7 +283,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 2. **Generate App Password:**
    - Go to: https://myaccount.google.com/apppasswords
    - Select "Mail" and "Other (Custom name)"
-   - Name it: "Gambling Web Platform"
+   - Name it: "PremiumCompitions"
    - Click "Generate"
    - **Copy the 16-character password** (e.g., `abcd efgh ijkl mnop`)
    - Remove spaces: `abcdefghijklmnop`
@@ -317,12 +317,12 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 1. Go to https://dashboard.render.com
 2. Click **"New +"** → **"Web Service"**
 3. Click **"Connect account"** and authorize GitHub
-4. Select your repository: `gambling-web`
+4. Select your repository: `gambling-web` (your GitHub repo name stays as-is)
 5. Fill in:
 
 **Basic Settings:**
 ```
-Name: gambling-web-backend
+Name: premiumcompitions-backend
 Region: Frankfurt (or closest to you)
 Branch: main
 Root Directory: backend
@@ -334,6 +334,8 @@ Runtime: Node
 Build Command: npm install && npm run build
 Start Command: npm start
 ```
+
+> ⚠️ **Note:** `@types/*` and `typescript` have been moved to `dependencies` (not `devDependencies`) so they are installed during the production build. This is already done in the code — no extra steps needed.
 
 **Instance Type:**
 ```
@@ -361,9 +363,9 @@ SMTP_SECURE = false
 SMTP_USER = [your gmail]
 SMTP_PASS = [your app password]
 EMAIL_FROM = [your gmail]
-EMAIL_FROM_NAME = Gambling Web Platform
+EMAIL_FROM_NAME = PremiumCompitions
 STRIPE_SECRET_KEY = [your stripe key]
-STRIPE_WEBHOOK_SECRET = [leave empty for now]
+STRIPE_WEBHOOK_SECRET = placeholder
 CLOUDINARY_CLOUD_NAME = [your cloud name]
 CLOUDINARY_API_KEY = [your api key]
 CLOUDINARY_API_SECRET = [your api secret]
@@ -371,9 +373,12 @@ UPLOAD_DIR = /tmp/uploads
 MAX_FILE_SIZE = 5242880
 RATE_LIMIT_WINDOW_MS = 900000
 RATE_LIMIT_MAX_REQUESTS = 100
+FRONTEND_URL = https://placeholder.com
 ```
 
-**For API_BASE_URL and FRONTEND_URL:** Leave empty for now, we'll add them later.
+> ⚠️ **Important:** `FRONTEND_URL` and `STRIPE_WEBHOOK_SECRET` **must not be left empty** — the server will crash on startup if they are missing or blank. Use `https://placeholder.com` and `placeholder` for now. You will update them with real values after frontend deployment and Stripe webhook setup.
+
+**For `API_BASE_URL`:** Leave empty for now, add it after deployment.
 
 6. Click **"Create Web Service"**
 7. **Wait 5-10 minutes** for first deployment
@@ -381,59 +386,57 @@ RATE_LIMIT_MAX_REQUESTS = 100
 #### Step 2.5: Get Backend URL
 
 Once deployed:
-1. Your backend URL will be: `https://gambling-web-backend.onrender.com`
+1. Your backend URL will be: `https://premiumcompitions-backend.onrender.com`
 2. **Copy this URL** - you'll need it for frontend
-3. Test it: Open `https://gambling-web-backend.onrender.com/api/competitions` in browser
+3. Test it: Open `https://premiumcompitions-backend.onrender.com/api/competitions` in browser
 
 ---
 
 ### **👤 HUMAN TASK 9: Run Database Migrations**
 
-**Option A: Use Render Shell (Recommended)**
+> ✅ **No manual action needed!** Migrations now run **automatically on server startup**.
 
-1. In Render dashboard, go to your backend service
-2. Click **"Shell"** tab (left sidebar)
-3. Run migrations:
+The backend has a built-in migration runner (`src/config/migrate.ts`) that:
+- Runs all 15 SQL migration files in order on every startup
+- Tracks applied migrations in a `_migrations` table
+- Skips already-applied migrations on future restarts
+- Works entirely on the free tier — no Render Shell required
 
-```bash
-npm run db:migrate
-# If error, try:
-npx ts-node database/run-migrations.ts
-# Or manually run each:
-psql $DATABASE_URL -f database/migrations/001_create_users.sql
-psql $DATABASE_URL -f database/migrations/002_create_competitions.sql
-# ... (run all 15 migrations)
+> ⚠️ **Note:** Render Shell requires a paid plan. The auto-migration approach was added specifically to avoid this limitation.
+
+**Verify migrations ran** by checking Render logs after first deploy — you should see:
+```
+✅ Migration applied: 001_create_users.sql
+✅ Migration applied: 002_create_competitions.sql
+...
+✅ Applied 15 migration(s) successfully.
 ```
 
-**Option B: Connect from Local Machine**
-
-```bash
-# Use the External Database URL from Render
-psql "postgresql://raffle_user:pass@dpg-xxx.render.com/raffle_db"
-
-# Run migrations manually
-\i backend/database/migrations/001_create_users.sql
-\i backend/database/migrations/002_create_competitions.sql
-# ... continue for all 15 files
+On subsequent restarts:
 ```
-
-**Verify migrations:**
-```sql
-\dt
--- Should show 15 tables
+✅ Database up to date, no migrations needed.
 ```
 
 ---
 
 ### **👤 HUMAN TASK 10: Seed Database (Optional but Recommended)**
 
-**In Render Shell:**
+> ⚠️ **Render Shell requires a paid plan.** Use the `RUN_SEEDS` environment variable instead — no shell access needed.
 
-```bash
-npm run seed
-# Or:
-npx ts-node database/seeds/run-all.ts
-```
+#### How to seed using env var:
+
+1. Go to Render dashboard → Backend service → **Environment**
+2. Add this variable:
+   ```
+   RUN_SEEDS = true
+   ```
+3. Click **"Save Changes"** → service will redeploy and run seeds automatically on startup
+4. Check Render logs — you should see:
+   ```
+   🌱 RUN_SEEDS=true detected, running seeds...
+   ✅ Database seeded successfully!
+   ```
+5. **Important:** After seeding, go back to Environment, **delete the `RUN_SEEDS` variable**, and save again. This prevents seeds from running again on the next restart (which would wipe and re-insert test data).
 
 **This creates:**
 - 3 test users (admin@test.com, user1@test.com, user2@test.com)
@@ -448,12 +451,14 @@ npx ts-node database/seeds/run-all.ts
 ### **👤 HUMAN TASK 11: Update Backend URLs**
 
 1. Go back to Render dashboard → Backend service → Environment
-2. Add these NOW:
+2. Update these values:
 
 ```
-API_BASE_URL = https://gambling-web-backend.onrender.com
-FRONTEND_URL = [leave empty, will add after frontend deployment]
+API_BASE_URL = https://premiumcompitions-backend.onrender.com
+FRONTEND_URL = https://placeholder.com
 ```
+
+> ⚠️ Do **not** leave `FRONTEND_URL` empty — the server will crash. Use `https://placeholder.com` until your Vercel frontend is deployed, then update it with the real URL.
 
 3. Click **"Save Changes"**
 4. Service will auto-redeploy (1-2 minutes)
@@ -472,7 +477,7 @@ FRONTEND_URL = [leave empty, will add after frontend deployment]
 
 ```env
 # Backend API URL (from Phase 2)
-NEXT_PUBLIC_API_URL=https://gambling-web-backend.onrender.com/api
+NEXT_PUBLIC_API_URL=https://premiumcompitions-backend.onrender.com/api
 
 # Stripe Publishable Key (Test Mode)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_PUBLISHABLE_KEY_HERE
@@ -491,7 +496,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_PUBLISHABLE_KEY_HERE
 
 1. Go to https://vercel.com/new
 2. Click **"Import Git Repository"**
-3. Select your `gambling-web` repository
+3. Select your `gambling-web` repository (your GitHub repo name stays as-is)
 4. Configure:
 
 ```
@@ -507,7 +512,7 @@ Install Command: npm install
 Click "Environment Variables" and add:
 
 ```
-NEXT_PUBLIC_API_URL = https://gambling-web-backend.onrender.com/api
+NEXT_PUBLIC_API_URL = https://premiumcompitions-backend.onrender.com/api
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = pk_test_YOUR_KEY
 ```
 
@@ -517,7 +522,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = pk_test_YOUR_KEY
 #### Step 3.3: Get Frontend URL
 
 Once deployed:
-1. Your frontend URL will be: `https://gambling-web-xyz.vercel.app`
+1. Your frontend URL will be: `https://premiumcompitions.vercel.app`
 2. **Copy this URL**
 3. Open it in browser to verify
 
@@ -527,10 +532,10 @@ Once deployed:
 
 1. Go to Render dashboard → Backend service → Environment
 2. Find `FRONTEND_URL` variable
-3. Set value to: `https://gambling-web-xyz.vercel.app`
+3. Set value to: `https://premiumcompitions.vercel.app`
 4. **Also add new variable:**
 ```
-CORS_ORIGIN = https://gambling-web-xyz.vercel.app
+CORS_ORIGIN = https://premiumcompitions.vercel.app
 ```
 5. Click **"Save Changes"**
 6. Wait for backend to redeploy (1-2 minutes)
@@ -541,42 +546,57 @@ CORS_ORIGIN = https://gambling-web-xyz.vercel.app
 
 **Estimated Time:** 20 minutes
 
-### **👤 HUMAN TASK 15: Setup Stripe Webhook**
+### **👤 HUMAN TASK 15: Setup Stripe Webhook** *(Optional for initial testing — skip and come back later)*
+
+> ℹ️ **You can skip this task initially.** Payments will still work without webhooks during testing. The webhook only adds server-side payment confirmation as a backup. Come back to this once the rest of the platform is working.
+>
+> **To find webhooks in Stripe sandbox:**
+> - Left sidebar → **"Developers"** → **"Webhooks"**
+> - Or direct URL: https://dashboard.stripe.com/test/webhooks
+> - If you see **"Add destination"** instead of **"Add endpoint"**, that's the same thing — Stripe renamed it.
+> - Keep `STRIPE_WEBHOOK_SECRET = placeholder` in Render until you set this up.
 
 #### Step 4.1: Create Webhook Endpoint
 
+> **Your webhook endpoint URL is:**
+> ```
+> https://premiumcompitions-backend.onrender.com/api/webhooks/stripe
+> ```
+> This comes from `app.ts` → `app.use('/api/webhooks', webhookRoutes)` + `router.post('/stripe', ...)`.
+
+**Steps in Stripe dashboard:**
+
 1. Go to https://dashboard.stripe.com/test/webhooks
-2. Click **"Add endpoint"**
-3. Fill in:
-
-```
-Endpoint URL: https://gambling-web-backend.onrender.com/api/webhooks/stripe
-Description: Gambling Web payment events
-```
-
-4. **Select events to listen to:**
+2. Make sure you are in **Test Mode** (toggle in top-right corner)
+3. Click **"Add destination"** (Stripe recently renamed "Add endpoint" to "Add destination")
+4. On the next screen:
+   - Select **"Webhook"**
+   - Click **"Continue"**
+5. Fill in the form:
+   - **Endpoint URL:** `https://premiumcompitions-backend.onrender.com/api/webhooks/stripe`
+   - **Description:** `PremiumCompitions payment events` *(optional)*
+6. Under **"Select events"**, search and add:
    - `payment_intent.succeeded`
    - `payment_intent.payment_failed`
    - `charge.refunded`
-
-5. Click **"Add endpoint"**
+7. Click **"Add destination"** / **"Create"** to save
 
 #### Step 4.2: Get Webhook Secret
 
-1. Click on the webhook you just created
-2. Click **"Reveal"** next to "Signing secret"
-3. Copy the secret (starts with `whsec_`)
-4. Go to Render → Backend → Environment
-5. Update `STRIPE_WEBHOOK_SECRET` with this value
-6. Save changes
+1. Click on the webhook/destination you just created
+2. Find **"Signing secret"** section → click **"Reveal"**
+3. Copy the value (starts with `whsec_`)
+4. Go to Render → Backend service → **Environment**
+5. Update `STRIPE_WEBHOOK_SECRET` with this value (replace `placeholder`)
+6. Click **"Save Changes"** → backend will redeploy
 
 #### Step 4.3: Test Webhook
 
-1. In Stripe dashboard, go to webhook details
-2. Click **"Send test webhook"**
-3. Select event: `payment_intent.succeeded`
-4. Click **"Send test webhook"**
-5. Should show **200 OK** response
+1. In Stripe dashboard, click on your webhook → **"Send test webhook"**
+2. Select event: `payment_intent.succeeded`
+3. Click **"Send test webhook"**
+4. Should show **200 OK** response
+5. Check Render logs — should show: `Received Stripe webhook: payment_intent.succeeded`
 
 ---
 
@@ -593,7 +613,7 @@ Description: Gambling Web payment events
 
 **Method 2: Via API**
 ```bash
-curl -X POST https://gambling-web-backend.onrender.com/api/auth/register \
+curl -X POST https://premiumcompitions-backend.onrender.com/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -619,7 +639,7 @@ curl -X POST https://gambling-web-backend.onrender.com/api/auth/register \
 
 #### Test 1: Basic Functionality
 
-**Visit:** `https://gambling-web-xyz.vercel.app`
+**Visit:** `https://premiumcompitions.vercel.app`
 
 - [ ] ✅ Homepage loads
 - [ ] ✅ Competitions page shows competitions
@@ -737,7 +757,7 @@ curl -X POST https://gambling-web-backend.onrender.com/api/auth/register \
 
 3. **Test Backend Directly:**
    ```bash
-   curl https://gambling-web-backend.onrender.com/api/competitions
+   curl https://premiumcompitions-backend.onrender.com/api/competitions
    ```
    Should return JSON with competitions
 
@@ -865,8 +885,8 @@ curl -X POST https://gambling-web-backend.onrender.com/api/auth/register \
 ### **URLs & Credentials**
 
 ```
-Frontend: https://gambling-web-xyz.vercel.app
-Backend: https://gambling-web-backend.onrender.com
+Frontend: https://premiumcompitions.vercel.app
+Backend: https://premiumcompitions-backend.onrender.com
 Database: dpg-xxxxx.render.com:5432
 
 Admin Account:
