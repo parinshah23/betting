@@ -27,7 +27,8 @@ export async function runMigrations(): Promise<void> {
     const applied = new Set(rows.map((r: { filename: string }) => r.filename));
 
     // Find migration files
-    const migrationsDir = path.join(__dirname, '../../database/migrations');
+    // __dirname at runtime = dist/src/config/, so go up 3 levels to reach backend/database/migrations/
+    const migrationsDir = path.join(__dirname, '../../../database/migrations');
 
     if (!fs.existsSync(migrationsDir)) {
       console.log('⚠️  No migrations directory found, skipping migrations.');
