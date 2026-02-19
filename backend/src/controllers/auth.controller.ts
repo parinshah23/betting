@@ -31,8 +31,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     // In a real app, you might set the refresh token as an httpOnly cookie
     res.cookie('refreshToken', result.tokens.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: true, // Always true for cross-site
+      sameSite: 'none', // Allow cross-site usage
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
