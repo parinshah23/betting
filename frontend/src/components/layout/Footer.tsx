@@ -5,14 +5,12 @@ import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 export function Footer() {
   const footerLinks = {
     company: [
-      { href: '/about', label: 'About Us' },
       { href: '/how-it-works', label: 'How It Works' },
       { href: '/winners', label: 'Winners' },
-      { href: '/careers', label: 'Careers' },
+      { href: '/competitions', label: 'All Competitions' },
     ],
     support: [
       { href: '/faq', label: 'FAQ' },
-      { href: '/contact', label: 'Contact Us' },
       { href: '/terms', label: 'Terms & Conditions' },
       { href: '/privacy', label: 'Privacy Policy' },
     ],
@@ -117,7 +115,7 @@ export function Footer() {
               <Link href="/privacy" className="hover:text-white transition-colors">
                 Privacy
               </Link>
-              <Link href="/cookies" className="hover:text-white transition-colors">
+              <Link href="/privacy" className="hover:text-white transition-colors">
                 Cookies
               </Link>
             </div>
