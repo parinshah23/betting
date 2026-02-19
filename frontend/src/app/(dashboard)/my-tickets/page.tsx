@@ -276,7 +276,7 @@ function TicketCard({ ticket, showWinner = false }: TicketCardProps) {
               <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-500">
                 <span className="flex items-center gap-1">
                   <TicketIcon className="w-4 h-4" />
-                  Ticket #{ticket.ticketNumber.toString().padStart(6, '0')}
+                  Ticket #{ticket.ticketNumber?.toString().padStart(6, '0') || '---'}
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />

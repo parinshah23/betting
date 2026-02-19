@@ -25,7 +25,7 @@ export default function CheckoutClient() {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const stripe = useStripe();
   const elements = useElements();
-  const { cart, isLoading: isCartLoading } = useCart();
+  const { cart, isLoading: isCartLoading, fetchCart } = useCart();
   const { data: wallet, isLoading: isWalletLoading } = useSWR('/wallet', fetchWallet);
   const { showError, showSuccess } = useToast();
 
@@ -144,6 +144,10 @@ export default function CheckoutClient() {
 
       // 4. Success (order was paid with wallet or Stripe payment succeeded)
       showSuccess('Order placed successfully!');
+      
+      // Refresh cart to reflect empty state
+      await fetchCart();
+      
       router.push(`/checkout/success?order=${orderNumber}`);
 
     } catch (err: unknown) {
