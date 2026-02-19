@@ -3,6 +3,7 @@ import { competitionModel } from '../models/competition.model';
 import { ticketModel } from '../models/ticket.model';
 import { sendSuccess, sendPaginated } from '../utils/response';
 import { NotFoundError } from '../middleware/errorHandler';
+import pool from '../config/database';
 
 /**
  * Get all competitions with filtering and pagination
@@ -98,9 +99,12 @@ export const getCompetitionBySlug = async (req: Request, res: Response, next: Ne
     const soldTickets = competition.total_tickets - availableTickets;
     const progress = Math.round((soldTickets / competition.total_tickets) * 100);
 
-    // Get competition images (if you have a model for this)
-    // For now, we'll return empty array
-    const images: any[] = [];
+    // Get competition images
+    const imagesResult = await pool.query(
+      'SELECT id, image_url, alt_text, sort_order, is_primary FROM competition_images WHERE competition_id = $1 ORDER BY sort_order ASC',
+      [competition.id]
+    );
+    const images = imagesResult.rows;
 
     sendSuccess(res, {
       data: {

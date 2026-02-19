@@ -317,6 +317,14 @@ export const executeDraw = async (req: Request, res: Response, next: NextFunctio
       winning_ticket_number: winningTicket.ticket_number,
     });
 
+    // Create winner claim record
+    await pool.query(
+      `INSERT INTO winner_claims (competition_id, user_id, ticket_number)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (competition_id, user_id) DO NOTHING`,
+      [id, winningTicket.user_id, winningTicket.ticket_number]
+    );
+
     // Get winner details
     const winner = await userModel.findById(winningTicket.user_id);
 

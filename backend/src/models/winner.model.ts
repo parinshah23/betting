@@ -31,7 +31,7 @@ class WinnerModel {
         c.title as competition_title,
         c.slug as competition_slug,
         c.prize_value,
-        c.image_url as competition_image
+        (SELECT ci.image_url FROM competition_images ci WHERE ci.competition_id = c.id AND ci.is_primary = true LIMIT 1) as competition_image
       FROM winner_claims wc
       JOIN competitions c ON wc.competition_id = c.id
       WHERE wc.user_id = $1

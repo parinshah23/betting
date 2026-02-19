@@ -25,7 +25,7 @@ interface Competition {
   ticket_price: number;
 }
 
-const fetchReadyCompetitions = () => api.get<{ competitions: Competition[] }>('/api/admin/competitions?status=ended').then(res => res.data?.competitions);
+const fetchReadyCompetitions = () => api.get<{ competitions: Competition[] }>('/admin/competitions?status=ended').then(res => res.data?.competitions);
 
 interface DrawResult {
   winner?: {
@@ -50,7 +50,7 @@ export default function AdminDrawsPage() {
 
     setIsExecuting(true);
     try {
-      const response = await api.post(`/api/admin/competitions/${selectedCompetition.id}/draw`, {});
+      const response = await api.post(`/admin/competitions/${selectedCompetition.id}/draw`, {});
       if (response.success) {
         setDrawResult(response.data as DrawResult);
         await mutate();
@@ -62,8 +62,21 @@ export default function AdminDrawsPage() {
     }
   };
 
-  const handleExport = (comp: Competition) => {
-    window.open(`/api/admin/competitions/${comp.id}/entries`, '_blank');
+  const handleExport = async (comp: Competition) => {
+    try {
+      const response = await api.get(`/admin/competitions/${comp.id}/entries`);
+      if (response.success && response.data) {
+        const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${comp.title.replace(/\s+/g, '-')}-entries.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch {
+      console.error('Failed to export entries');
+    }
   };
 
   if (isLoading) {

@@ -78,11 +78,10 @@ export const authService = {
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
 
-    // Save refresh token (hash it for security)
+    // Save refresh token in DB for invalidation on logout/password reset
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
-    // For simplicity in this step, we'll skip DB token storage or implement it briefly
-    // await userModel.saveRefreshToken(user.id, refreshToken, expiresAt);
+    await userModel.saveRefreshToken(user.id, refreshToken, expiresAt);
 
     return {
       user: {
@@ -149,8 +148,6 @@ export const authService = {
 
     // Generate secure random token
     const token = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-
     // Token expires in 1 hour
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);

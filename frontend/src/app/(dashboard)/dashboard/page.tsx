@@ -69,9 +69,17 @@ const winsFetcher = (url: string) =>
   });
 
 const transactionsFetcher = (url: string) =>
-  api.get<WalletTransaction[]>(url).then((res) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  api.get<any[]>(url).then((res) => {
     if (res.success && res.data) {
-      return res.data;
+      return res.data.map((t: Record<string, unknown>): WalletTransaction => ({
+        id: t.id as string,
+        type: t.type as WalletTransaction['type'],
+        amount: t.amount as number,
+        balanceAfter: (t.balanceAfter ?? t.balance_after ?? 0) as number,
+        description: (t.description ?? '') as string,
+        createdAt: (t.createdAt ?? t.created_at ?? '') as string,
+      }));
     }
     throw new Error('Failed to fetch transactions');
   });

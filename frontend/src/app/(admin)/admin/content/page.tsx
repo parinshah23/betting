@@ -24,7 +24,7 @@ interface ContentPage {
   updated_at: string;
 }
 
-const fetchContent = () => api.get<{ data: ContentPage[] }>('/api/admin/content').then(res => res.data?.data);
+const fetchContent = () => api.get<{ data: ContentPage[] }>('/admin/content').then(res => res.data?.data);
 
 export default function AdminContentPage() {
   const [editingPage, setEditingPage] = useState<ContentPage | null>(null);
@@ -49,7 +49,7 @@ export default function AdminContentPage() {
     setSaveError(null);
 
     try {
-      const response = await api.put(`/api/admin/content/${editingPage.slug}`, {
+      const response = await api.put(`/admin/content/${editingPage.slug}`, {
         title: editTitle,
         content: editContent
       });

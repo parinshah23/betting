@@ -300,7 +300,7 @@ export const competitionModel = {
    */
   async countSoldTickets(competitionId: string): Promise<number> {
     const result = await pool.query(
-      'SELECT COUNT(*) FROM tickets WHERE competition_id = $1',
+      "SELECT COUNT(*) FROM tickets WHERE competition_id = $1 AND status = 'sold'",
       [competitionId]
     );
     return parseInt(result.rows[0].count, 10);

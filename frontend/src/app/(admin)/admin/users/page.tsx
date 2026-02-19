@@ -27,7 +27,7 @@ interface User {
   created_at: string;
 }
 
-const fetchUsers = () => api.get<{ data: User[] }>('/api/admin/users').then(res => res.data?.data);
+const fetchUsers = () => api.get<{ data: User[] }>('/admin/users').then(res => res.data?.data);
 
 export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,7 +49,7 @@ export default function AdminUsersPage() {
     if (!selectedUser) return;
 
     try {
-      const response = await api.post(`/api/admin/users/${selectedUser.id}/ban`, {
+      const response = await api.post(`/admin/users/${selectedUser.id}/ban`, {
         is_banned: !selectedUser.is_banned
       });
       if (response.success) {
@@ -66,7 +66,7 @@ export default function AdminUsersPage() {
     if (!selectedUser || !walletAmount) return;
 
     try {
-      const response = await api.post(`/api/admin/users/${selectedUser.id}/wallet`, {
+      const response = await api.post(`/admin/users/${selectedUser.id}/wallet`, {
         amount: parseFloat(walletAmount),
         description: 'Admin adjustment'
       });

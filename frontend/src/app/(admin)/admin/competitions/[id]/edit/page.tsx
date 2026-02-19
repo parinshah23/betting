@@ -68,7 +68,7 @@ export default function EditCompetitionPage() {
   useEffect(() => {
     const fetchCompetition = async () => {
       try {
-        const response = await api.get(`/api/admin/competitions/${competitionId}`);
+        const response = await api.get(`/admin/competitions/${competitionId}`);
         if (response.success && response.data) {
           const data = response.data as CompetitionFormData;
           setFormData({
@@ -106,7 +106,7 @@ export default function EditCompetitionPage() {
     setError(null);
 
     try {
-      const response = await api.put(`/api/admin/competitions/${competitionId}`, formData);
+      const response = await api.put(`/admin/competitions/${competitionId}`, formData);
 
       if (response.success) {
         router.push('/admin/competitions');

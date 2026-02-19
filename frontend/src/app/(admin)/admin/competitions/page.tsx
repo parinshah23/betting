@@ -42,7 +42,7 @@ interface DrawResult {
   total_entries?: number;
 }
 
-const fetchCompetitions = () => api.get<{ competitions: CompetitionWithStats[] }>('/api/admin/competitions').then(res => res.data?.competitions);
+const fetchCompetitions = () => api.get<{ competitions: CompetitionWithStats[] }>('/admin/competitions').then(res => res.data?.competitions);
 
 export default function AdminCompetitionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,7 +67,7 @@ export default function AdminCompetitionsPage() {
     if (!selectedCompetition) return;
 
     try {
-      const response = await api.delete(`/api/admin/competitions/${selectedCompetition.id}`);
+      const response = await api.delete(`/admin/competitions/${selectedCompetition.id}`);
       if (response.success) {
         await mutate();
         setIsDeleteModalOpen(false);
@@ -82,7 +82,7 @@ export default function AdminCompetitionsPage() {
 
   const handleDuplicate = async (comp: CompetitionWithStats) => {
     try {
-      const response = await api.post(`/api/admin/competitions/${comp.id}/duplicate`, {});
+      const response = await api.post(`/admin/competitions/${comp.id}/duplicate`, {});
       if (response.success) {
         await mutate();
       } else {
@@ -98,7 +98,7 @@ export default function AdminCompetitionsPage() {
     setSelectedCompetition(comp);
 
     try {
-      const response = await api.post<DrawResult>(`/api/admin/competitions/${comp.id}/draw`, {});
+      const response = await api.post<DrawResult>(`/admin/competitions/${comp.id}/draw`, {});
       if (response.success && response.data) {
         await mutate();
         alert(`Winner selected! Ticket #${response.data.winner?.ticket_number}`);
@@ -113,8 +113,21 @@ export default function AdminCompetitionsPage() {
     }
   };
 
-  const handleExportEntries = (comp: CompetitionWithStats) => {
-    window.open(`/api/admin/competitions/${comp.id}/entries`, '_blank');
+  const handleExportEntries = async (comp: CompetitionWithStats) => {
+    try {
+      const response = await api.get(`/admin/competitions/${comp.id}/entries`);
+      if (response.success && response.data) {
+        const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${comp.title.replace(/\s+/g, '-')}-entries.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch {
+      setActionError('Failed to export entries');
+    }
   };
 
   if (isLoading) {

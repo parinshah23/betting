@@ -4,6 +4,7 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import DOMPurify from 'dompurify';
 import { ChevronRight, Share2 } from 'lucide-react';
 import { CompetitionDetail } from '@/types/competition';
 import { api } from '@/lib/api';
@@ -119,7 +120,7 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
             <h2 className="text-2xl font-bold text-neutral-900">Prize Details</h2>
             <div 
               className="prose prose-neutral max-w-none text-neutral-600"
-              dangerouslySetInnerHTML={{ __html: normalizedCompetition.description }} 
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(normalizedCompetition.description) }}
             />
           </div>
         </div>
@@ -184,7 +185,7 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
             <h2 className="text-2xl font-bold text-neutral-900">Prize Details</h2>
             <div 
               className="prose prose-neutral max-w-none text-neutral-600"
-              dangerouslySetInnerHTML={{ __html: competition.description }} 
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(competition.description) }}
             />
           </div>
           

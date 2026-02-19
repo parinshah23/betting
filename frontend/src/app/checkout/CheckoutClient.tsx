@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import useSWR from 'swr';
 import { api } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { Wallet } from '@/types';
@@ -21,11 +22,18 @@ const fetchWallet = () => api.get<Wallet>('/wallet').then(res => res.data);
 
 export default function CheckoutClient() {
   const router = useRouter();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const stripe = useStripe();
   const elements = useElements();
   const { cart, isLoading: isCartLoading } = useCart();
   const { data: wallet, isLoading: isWalletLoading } = useSWR('/wallet', fetchWallet);
   const { showError, showSuccess } = useToast();
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push('/login?redirect=%2Fcheckout');
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
 
   const [useWallet, setUseWallet] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);

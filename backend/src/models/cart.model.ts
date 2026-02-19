@@ -222,15 +222,14 @@ export const cartModel = {
     /**
      * Apply promo code
      */
-    async applyPromoCode(userId: string, promoCode: string, discountPercent: number): Promise<Cart> {
+    async applyPromoCode(userId: string, promoCode: string, discountAmount: number): Promise<Cart> {
         const cart = await this.getCartByUserId(userId);
 
         if (!cart) {
             throw new Error('Cart not found');
         }
 
-        const discountAmount = (cart.subtotal * discountPercent) / 100;
-        const total = cart.subtotal - discountAmount;
+        const total = Math.max(0, cart.subtotal - discountAmount);
 
         await pool.query(
             `UPDATE carts 

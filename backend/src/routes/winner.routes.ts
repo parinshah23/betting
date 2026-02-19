@@ -6,6 +6,7 @@ const router = Router();
 
 // Public routes
 router.get('/', winnerController.getWinners);
+router.get('/gallery', winnerController.getWinners);
 router.get('/recent', winnerController.getRecentWinners);
 
 // Protected routes - requires authentication

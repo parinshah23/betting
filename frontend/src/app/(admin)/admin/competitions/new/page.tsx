@@ -71,7 +71,7 @@ export default function CreateCompetitionPage() {
     setError(null);
 
     try {
-      const response = await api.post('/api/admin/competitions', formData);
+      const response = await api.post('/admin/competitions', formData);
 
       if (response.success) {
         router.push('/admin/competitions');

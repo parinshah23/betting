@@ -31,7 +31,7 @@ interface Order {
   }>;
 }
 
-const fetchOrders = () => api.get<{ data: Order[] }>('/api/admin/orders').then(res => res.data?.data);
+const fetchOrders = () => api.get<{ data: Order[] }>('/admin/orders').then(res => res.data?.data);
 
 export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,7 +55,7 @@ export default function AdminOrdersPage() {
     if (!selectedOrder) return;
 
     try {
-      const response = await api.post(`/api/admin/orders/${selectedOrder.id}/refund`, {
+      const response = await api.post(`/admin/orders/${selectedOrder.id}/refund`, {
         reason: refundReason
       });
       if (response.success) {

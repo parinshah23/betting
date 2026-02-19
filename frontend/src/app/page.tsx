@@ -387,8 +387,8 @@ export default function HomePage() {
                   >
                     <Award className="w-10 h-10 text-white" />
                   </div>
-                  <p className="font-semibold text-gray-900 text-sm">{winner.displayName}</p>
-                  <p className="text-xs text-gray-500 line-clamp-1">{winner.prizeName}</p>
+                  <p className="font-semibold text-gray-900 text-sm">{winner.displayName ?? winner.display_name}</p>
+                  <p className="text-xs text-gray-500 line-clamp-1">{winner.prizeName ?? winner.prize_name}</p>
                 </div>
               ))}
             </div>

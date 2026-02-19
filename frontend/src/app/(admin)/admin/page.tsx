@@ -53,9 +53,9 @@ interface TopCompetition {
   endDate: string;
 }
 
-const fetchStats = () => api.get<{ stats: AdminStats }>('/api/admin/stats').then(res => res.data?.stats);
-const fetchActivity = () => api.get<{ activities: RecentActivity[] }>('/api/admin/activity').then(res => res.data?.activities);
-const fetchTopCompetitions = () => api.get<{ competitions: TopCompetition[] }>('/api/admin/top-competitions').then(res => res.data?.competitions);
+const fetchStats = () => api.get<{ stats: AdminStats }>('/admin/stats').then(res => res.data?.stats);
+const fetchActivity = () => api.get<{ activities: RecentActivity[] }>('/admin/activity').then(res => res.data?.activities);
+const fetchTopCompetitions = () => api.get<{ competitions: TopCompetition[] }>('/admin/top-competitions').then(res => res.data?.competitions);
 
 export default function AdminDashboardPage() {
   const { data: stats, isLoading: statsLoading } = useSWR('admin-stats', fetchStats, { refreshInterval: 30000 });
