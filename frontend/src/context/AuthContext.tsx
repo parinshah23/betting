@@ -23,7 +23,7 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (credentials: LoginCredentials) => Promise<boolean>;
+  login: (credentials: LoginCredentials) => Promise<User | false>;
   register: (data: RegisterData) => Promise<boolean>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<boolean>;
@@ -98,13 +98,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.data) {
         api.setAccessToken(response.data.tokens.accessToken);
         api.setRefreshToken(response.data.tokens.refreshToken);
+        const mappedUser = mapUser(response.data.user);
         setState({
-          user: mapUser(response.data.user),
+          user: mappedUser,
           isLoading: false,
           isAuthenticated: true,
           error: null,
         });
-        return true;
+        return mappedUser;
       } else {
         setState((prev) => ({
           ...prev,
@@ -139,7 +140,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await api.post<{ id: string; email: string; first_name: string; last_name: string; role: string }>('/auth/register', payload);
       if (response.success && response.data) {
         // Auto-login after successful registration
-        return await login({ email: data.email, password: data.password });
+        const result = await login({ email: data.email, password: data.password });
+        return !!result;
       } else {
         setState((prev) => ({
           ...prev,

@@ -5,7 +5,7 @@
  * Handles authentication, error formatting, token refresh, and response parsing.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api`;
 
 interface ApiResponse<T> {
   success: boolean;

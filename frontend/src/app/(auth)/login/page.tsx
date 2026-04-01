@@ -29,9 +29,13 @@ function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     clearError();
-    const success = await login({ email: data.email, password: data.password });
-    if (success) {
-      router.push(redirectTo);
+    const user = await login({ email: data.email, password: data.password });
+    if (user) {
+      if (user.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push(redirectTo);
+      }
     }
   };
 

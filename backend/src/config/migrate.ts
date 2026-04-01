@@ -27,8 +27,10 @@ export async function runMigrations(): Promise<void> {
     const applied = new Set(rows.map((r: { filename: string }) => r.filename));
 
     // Find migration files
-    // __dirname at runtime = dist/src/config/, so go up 3 levels to reach backend/database/migrations/
-    const migrationsDir = path.join(__dirname, '../../../database/migrations');
+    // Works for both ts-node (src/config) and compiled (dist/src/config)
+    const migrationsDir = path.resolve(__dirname, '../../../database/migrations').includes('dist')
+      ? path.join(__dirname, '../../../database/migrations')
+      : path.join(__dirname, '../../database/migrations');
 
     if (!fs.existsSync(migrationsDir)) {
       console.log('⚠️  No migrations directory found, skipping migrations.');
