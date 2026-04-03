@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState } from 'react';
@@ -38,6 +39,7 @@ interface WinnersData {
   thisMonthWinners: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const fetcher = (url: string) => api.get<any>(url).then(res => {
   if (res.success && res.data) {
     if (Array.isArray(res.data)) {
@@ -62,7 +64,7 @@ const fetcher = (url: string) => api.get<any>(url).then(res => {
 export default function WinnersPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: winnersData, error, isLoading } = useSWR(
+  const { data: winnersData, error, isLoading } = useSWR<WinnersData>(
     '/winners/gallery',
     fetcher,
     {

@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
   }, [checkAuth]);
 
-  const login = async (credentials: LoginCredentials): Promise<boolean> => {
+  const login = async (credentials: LoginCredentials): Promise<User | false> => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
       const response = await api.post<{ user: User; tokens: { accessToken: string; refreshToken: string } }>('/auth/login', credentials);

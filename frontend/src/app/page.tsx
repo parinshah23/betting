@@ -83,7 +83,7 @@ export default function HomePage() {
             {/* Premium badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8 animate-fade-in">
               <Sparkles className="w-4 h-4 text-amber-400" />
-              <span className="text-white/90 text-sm font-medium">UK's biggest competition platform</span>
+              <span className="text-white/90 text-sm font-medium">UK&apos;s biggest competition platform</span>
               <Crown className="w-4 h-4 text-amber-400" />
             </div>
 
