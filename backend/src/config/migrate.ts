@@ -28,7 +28,7 @@ export async function runMigrations(): Promise<void> {
 
     // Find migration files
     // Works for both ts-node (src/config) and compiled (dist/src/config)
-    const migrationsDir = path.resolve(__dirname, '../../../database/migrations').includes('dist')
+    const migrationsDir = __dirname.includes('dist')
       ? path.join(__dirname, '../../../database/migrations')
       : path.join(__dirname, '../../database/migrations');
 

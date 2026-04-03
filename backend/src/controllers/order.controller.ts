@@ -144,7 +144,10 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
 
     // Reserve tickets
     for (const item of cart.items) {
-      await ticketModel.reserveTickets(item.competition_id, item.quantity, userId, order.id);
+      const reserved = await ticketModel.reserveTickets(item.competition_id, item.quantity, userId, order.id);
+      if (reserved.length < item.quantity) {
+        throw BadRequestError('Checkout failed: Could not reserve ' + item.quantity + ' tickets. They may have sold out.');
+      }
     }
 
     // NOTE: Don't clear cart here - only clear after successful payment
@@ -159,14 +162,11 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       }
 
       // Mark tickets as sold
-      const items = await orderModel.getOrderItems(order.id);
-      for (const item of items) {
-        const tickets = await ticketModel.findByCompetition(item.competition_id, { status: 'reserved' });
-        const ticketIds = tickets
-          .filter(t => t.order_id === order.id)
-          .map(t => t.id);
-        await ticketModel.markAsSold(ticketIds);
-      }
+      const { query } = await import('../config/database');
+      await query(
+        `UPDATE tickets SET status = 'sold', purchased_at = CURRENT_TIMESTAMP WHERE order_id = $1 AND status = 'reserved'`,
+        [order.id]
+      );
 
       await orderModel.updateStatus(order.id, 'paid');
 
@@ -312,14 +312,11 @@ export const confirmOrder = async (req: Request, res: Response, next: NextFuncti
     }
 
     // Mark tickets as sold
-    const items = await orderModel.getOrderItems(order_id);
-    for (const item of items) {
-      const tickets = await ticketModel.findByCompetition(item.competition_id, { status: 'reserved' });
-      const ticketIds = tickets
-        .filter(t => t.order_id === order_id)
-        .map(t => t.id);
-      await ticketModel.markAsSold(ticketIds);
-    }
+    const { query } = await import('../config/database');
+    await query(
+      `UPDATE tickets SET status = 'sold', purchased_at = CURRENT_TIMESTAMP WHERE order_id = $1 AND status = 'reserved'`,
+      [order_id]
+    );
 
     // Update order status
     await orderModel.updateStatus(order_id, 'paid');

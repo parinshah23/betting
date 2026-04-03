@@ -153,6 +153,12 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
         return;
     }
 
+    // Find reserved tickets and mark as sold
+    await pool.query(
+        `UPDATE tickets SET status = 'sold', purchased_at = CURRENT_TIMESTAMP WHERE order_id = $1 AND status = 'reserved'`,
+        [orderId]
+    );
+
     // Update order status
     await orderModel.updateStatus(orderId, 'paid');
     console.log(`Order ${orderId} marked as paid via webhook`);

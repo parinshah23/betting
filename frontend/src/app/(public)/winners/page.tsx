@@ -38,8 +38,22 @@ interface WinnersData {
   thisMonthWinners: number;
 }
 
-const fetcher = (url: string) => api.get<WinnersData>(url).then(res => {
+const fetcher = (url: string) => api.get<any>(url).then(res => {
   if (res.success && res.data) {
+    if (Array.isArray(res.data)) {
+      const winners = res.data;
+      return {
+        winners,
+        totalWinners: winners.length,
+        totalPrizeValue: winners.reduce((sum: number, w: any) => sum + Number(w.competition?.prize_value || w.prizeValue || 0), 0),
+        thisMonthWinners: winners.filter((w: any) => {
+          const date = w.wonAt || w.created_at || new Date();
+          const d = new Date(date);
+          const now = new Date();
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }).length
+      } as WinnersData;
+    }
     return res.data;
   }
   throw new Error('Failed to fetch winners');
@@ -57,9 +71,9 @@ export default function WinnersPage() {
   );
 
   // Filter winners
-  const filteredWinners = winnersData?.winners.filter(winner =>
-    winner.competition.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    winner.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredWinners = (winnersData?.winners || []).filter(winner =>
+    winner.competition?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    winner.displayName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (isLoading) {
