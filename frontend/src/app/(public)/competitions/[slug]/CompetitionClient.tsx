@@ -46,7 +46,7 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
   if (!competition) {
     return (
       <div className="container mx-auto px-4 py-12 flex justify-center">
-         <div className="animate-spin h-10 w-10 border-4 border-primary-500 border-t-transparent rounded-full" />
+        <div className="animate-spin h-10 w-10 border-4 border-primary-500 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -69,6 +69,7 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
     setSkillAnswer(answer);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleAddToCart = async (quantity: number, _ticketNumbers?: number[]) => {
     if (!user) {
       showError('Please login to purchase tickets');
@@ -139,7 +140,7 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
           {!isEnded && !isSoldOut ? (
             <div className="space-y-6">
               {/* Skill Question */}
-              <SkillQuestion 
+              <SkillQuestion
                 question={normalizedCompetition.skillQuestion}
                 competitionId={normalizedCompetition.id}
                 onVerified={handleVerified}
