@@ -20,9 +20,9 @@ export function Card({
   ...props
 }: CardProps) {
   const variants = {
-    default: 'bg-white shadow-sm',
-    elevated: 'bg-white shadow-lg',
-    bordered: 'bg-white border border-gray-200',
+    default: 'bg-white/5 border border-white/10',
+    elevated: 'bg-white/8 border border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
+    bordered: 'bg-white/5 border border-white/10',
   };
 
   const paddings = {
@@ -38,7 +38,7 @@ export function Card({
         'rounded-xl',
         variants[variant],
         paddings[padding],
-        hoverable && 'transition-shadow duration-200 hover:shadow-lg cursor-pointer',
+        hoverable && 'transition-all duration-200 hover:shadow-[0_0_20px_rgba(13,133,216,0.15)] hover:border-white/20 cursor-pointer',
         className
       )}
       {...props}
@@ -66,7 +66,7 @@ export function CardTitle({
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3 className={cn('text-xl font-semibold text-gray-900', className)} {...props}>
+    <h3 className={cn('text-xl font-semibold text-white', className)} {...props}>
       {children}
     </h3>
   );
@@ -78,7 +78,7 @@ export function CardDescription({
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn('text-sm text-gray-500 mt-1', className)} {...props}>
+    <p className={cn('text-sm text-white/50 mt-1', className)} {...props}>
       {children}
     </p>
   );
@@ -102,7 +102,7 @@ export function CardFooter({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('mt-4 pt-4 border-t border-gray-100', className)} {...props}>
+    <div className={cn('mt-4 pt-4 border-t border-white/10', className)} {...props}>
       {children}
     </div>
   );

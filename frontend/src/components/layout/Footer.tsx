@@ -30,20 +30,20 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 text-gray-300">
+    <footer className="bg-black border-t border-white/10 text-white/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0D85D8] to-[#0041C7] flex items-center justify-center shadow-[0_0_12px_rgba(13,133,216,0.3)]">
                 <span className="text-white font-bold text-xl">PC</span>
               </div>
               <div className="flex flex-col leading-tight">
                 <span className="text-xl font-bold text-white">Premium</span>
-                <span className="text-sm font-semibold text-accent-400">Competitions</span>
+                <span className="text-sm font-semibold text-[#3ACBE8]">Competitions</span>
               </div>
             </Link>
-            <p className="mt-6 text-gray-400 max-w-md leading-relaxed">
+            <p className="mt-6 text-white/40 max-w-md leading-relaxed">
               Enter our exciting online competitions and win incredible prizes!
               From tech gadgets to luxury cars, your dream prize could be just a ticket away.
             </p>
@@ -103,12 +103,12 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-800">
+        <div className="mt-12 pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-gray-400 text-sm">
+            <p className="text-white/40 text-sm">
               &copy; {new Date().getFullYear()} Premium Competitions. All rights reserved.
             </p>
-            <div className="flex items-center gap-4 text-sm text-gray-400">
+            <div className="flex items-center gap-4 text-sm text-white/40">
               <Link href="/terms" className="hover:text-white transition-colors">
                 Terms
               </Link>
@@ -120,7 +120,7 @@ export function Footer() {
               </Link>
             </div>
           </div>
-          <p className="mt-4 text-xs text-gray-500 text-center md:text-left">
+          <p className="mt-4 text-xs text-white/30 text-center md:text-left">
             Premium Competitions is a competition platform. 18+ only. Please play responsibly.
           </p>
         </div>

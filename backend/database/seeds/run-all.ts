@@ -30,7 +30,7 @@ async function runSeeds() {
         if (existingTables.includes('wallets')) await client.query('DELETE FROM wallets');
         if (existingTables.includes('promo_codes')) await client.query('DELETE FROM promo_codes');
         // Only delete test users, not all competitions
-        if (existingTables.includes('competitions')) await client.query("DELETE FROM competitions WHERE slug IN ('tesla-model-3', 'iphone-16-pro-max', 'rolex-submariner')");
+        if (existingTables.includes('competitions')) await client.query("DELETE FROM competitions WHERE slug IN ('tesla-model-3', 'iphone-16-pro-max', 'rolex-submariner', 'win-50-site-credit-premium-odds')");
         if (existingTables.includes('users')) await client.query("DELETE FROM users WHERE email LIKE '%@test.com'");
 
         // 2. Create test users
@@ -157,6 +157,34 @@ async function runSeeds() {
         await client.query(
             'INSERT INTO competition_images (competition_id, image_url, is_primary) VALUES ($1, $2, $3)',
             [rolexId, 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49', true]
+        );
+
+        // Win £50 Site Credit — Premium Odds 1:9
+        const siteCreditResult = await client.query(
+            `INSERT INTO competitions (
+        title, slug, description, prize_value, ticket_price, total_tickets,
+        end_date, status, skill_question, skill_answer, featured
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING id`,
+            [
+                '🔥 Win £50 Site Credit — Premium Odds 1:9',
+                'win-50-site-credit-premium-odds',
+                '<p>Win <strong>£50 Site Credit</strong> to spend on any competition on the platform!</p><ul><li>Only 9 tickets available — incredible 1 in 9 odds</li><li>Credit added instantly to your account on winning</li><li>Use credit on any live competition</li><li>Draw takes place once all tickets are sold</li></ul>',
+                50,
+                1.00,
+                9,
+                sevenDaysFromNow,
+                'live',
+                'How many tickets are available in this competition?',
+                '9',
+                true
+            ]
+        );
+        const siteCreditId = siteCreditResult.rows[0].id;
+
+        await client.query(
+            'INSERT INTO competition_images (competition_id, image_url, is_primary) VALUES ($1, $2, $3)',
+            [siteCreditId, 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da', true]
         );
 
         // 5. Create promo codes

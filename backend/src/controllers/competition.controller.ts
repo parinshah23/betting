@@ -133,18 +133,25 @@ export const getCompetitionTickets = async (req: Request, res: Response, next: N
       throw NotFoundError('Competition not found');
     }
 
-    const tickets = await ticketModel.findByCompetition(id, { status: 'available' });
+    const soldTickets = await ticketModel.findByCompetition(id, { status: 'sold' });
+    const reservedTickets = await ticketModel.findByCompetition(id, { status: 'reserved' });
+    const takenNumbers = new Set(
+      [...soldTickets, ...reservedTickets].map(t => Number(t.ticket_number))
+    );
+
+    const totalTickets = Number(competition.total_tickets);
+    const tickets = Array.from({ length: totalTickets }, (_, i) => ({
+      id: null,
+      ticket_number: i + 1,
+      status: takenNumbers.has(i + 1) ? 'sold' : 'available',
+    }));
 
     sendSuccess(res, {
       data: {
         competition_id: id,
-        total_tickets: competition.total_tickets,
-        available_tickets: tickets.length,
-        tickets: tickets.map(t => ({
-          id: t.id,
-          ticket_number: t.ticket_number,
-          status: t.status,
-        })),
+        total_tickets: totalTickets,
+        available_tickets: totalTickets - takenNumbers.size,
+        tickets,
       },
       message: 'Tickets retrieved successfully',
     });

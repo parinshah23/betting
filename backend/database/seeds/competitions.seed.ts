@@ -37,7 +37,28 @@ async function seedCompetitions() {
       ) ON CONFLICT (slug) DO NOTHING;
     `);
 
-     // 3. Ended / Sold Out
+    // 3. Win £50 Site Credit — Premium Odds (Rusboy-style)
+    await client.query(`
+      INSERT INTO competitions (
+        title, slug, description, short_description, prize_value, ticket_price, total_tickets,
+        status, end_date, skill_question, skill_answer, featured
+      ) VALUES (
+        '🔥 Win £50 Site Credit — Premium Odds 1:9', 'win-50-site-credit-premium-odds',
+        '<p>Win <strong>£50 Site Credit</strong> to spend on any competition on the platform!</p>
+<ul>
+  <li>Only 9 tickets available — incredible 1 in 9 odds</li>
+  <li>Credit is added instantly to your account on winning</li>
+  <li>Use credit on any live competition</li>
+  <li>Draw takes place once all tickets are sold</li>
+</ul>',
+        'Win £50 site credit with premium 1:9 odds. Only 9 tickets available!',
+        50.00, 1.00, 9,
+        'live', NOW() + INTERVAL '14 days',
+        'How many tickets are available in this competition?', '9', true
+      ) ON CONFLICT (slug) DO NOTHING;
+    `);
+
+    // 5. Ended / Sold Out
     await client.query(`
       INSERT INTO competitions (
         title, slug, description, short_description, prize_value, ticket_price, total_tickets,

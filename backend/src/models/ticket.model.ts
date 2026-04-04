@@ -98,6 +98,7 @@ export const ticketModel = {
 
   /**
    * Reserve tickets for a user (part of an order).
+   * Inserts new ticket rows for unused numbers rather than updating pre-generated rows.
    */
   async reserveTickets(
     competitionId: string,
@@ -109,25 +110,57 @@ export const ticketModel = {
     try {
       await client.query('BEGIN');
 
-      const result = await client.query(
-        `UPDATE tickets 
-         SET status = 'reserved', 
-             user_id = $3, 
-             order_id = $4 
-         WHERE id IN (
-           SELECT id FROM tickets 
-           WHERE competition_id = $1 
-           AND status = 'available' 
-           ORDER BY ticket_number 
-           LIMIT $2 
-           FOR UPDATE SKIP LOCKED
-         )
-         RETURNING *`,
-        [competitionId, quantity, userId, orderId]
+      // Lock the competition row to prevent concurrent reservation races
+      const compResult = await client.query(
+        'SELECT total_tickets FROM competitions WHERE id = $1 FOR UPDATE',
+        [competitionId]
       );
+      if (compResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return [];
+      }
+      const totalTickets = Number(compResult.rows[0].total_tickets);
+
+      // Get all ticket numbers already taken (sold or reserved)
+      const takenResult = await client.query(
+        `SELECT ticket_number FROM tickets WHERE competition_id = $1 AND status IN ('sold', 'reserved')`,
+        [competitionId]
+      );
+      const takenSet = new Set(takenResult.rows.map((r: { ticket_number: number }) => Number(r.ticket_number)));
+
+      // Build pool of available numbers
+      const available: number[] = [];
+      for (let i = 1; i <= totalTickets; i++) {
+        if (!takenSet.has(i)) available.push(i);
+      }
+
+      if (available.length < quantity) {
+        await client.query('ROLLBACK');
+        return [];
+      }
+
+      // Pick numbers randomly
+      const picks: number[] = [];
+      const availableCopy = [...available];
+      for (let i = 0; i < quantity; i++) {
+        const idx = Math.floor(Math.random() * availableCopy.length);
+        picks.push(availableCopy.splice(idx, 1)[0]);
+      }
+
+      // Insert reserved tickets
+      const inserted: Ticket[] = [];
+      for (const num of picks) {
+        const res = await client.query(
+          `INSERT INTO tickets (competition_id, user_id, ticket_number, order_id, status)
+           VALUES ($1, $2, $3, $4, 'reserved')
+           RETURNING *`,
+          [competitionId, userId, num, orderId]
+        );
+        inserted.push(res.rows[0]);
+      }
 
       await client.query('COMMIT');
-      return result.rows;
+      return inserted;
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;

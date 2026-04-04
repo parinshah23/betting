@@ -20,7 +20,7 @@ module.exports = {
           700: '#0041C7',  // Dark Indigo
           800: '#003099',
           900: '#001f6b',
-          950: '#000d33',  // Void Blue (Main Background)
+          950: '#000000',  // Pure Black (Main Background)
         },
         // Accent - lighter cyan for highlights
         accent: {
@@ -58,8 +58,8 @@ module.exports = {
         display: ['Poppins', 'sans-serif'],
       },
       backgroundImage: {
-        'gradient-premium': 'linear-gradient(135deg, #000d33 0%, #0041C7 50%, #0160C9 100%)',
-        'gradient-hero': 'radial-gradient(circle at top right, #0041C7 0%, #000d33 60%)',
+        'gradient-premium': 'linear-gradient(135deg, #000000 0%, #0041C7 50%, #0160C9 100%)',
+        'gradient-hero': 'radial-gradient(circle at top right, #0041C7 0%, #000000 60%)',
         'gradient-cta': 'linear-gradient(135deg, #0D85D8 0%, #0160C9 100%)',
         'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
       },

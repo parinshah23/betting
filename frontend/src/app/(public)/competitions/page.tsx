@@ -95,13 +95,12 @@ function CompetitionsContent() {
   const meta = data?.meta;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Premium Hero Section */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-primary-900 to-slate-900 text-white py-16 overflow-hidden">
-        {/* Animated background elements */}
+    <div className="min-h-screen bg-black">
+      {/* Hero Section */}
+      <section className="relative bg-black text-white py-16 overflow-hidden border-b border-white/5">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-[#0160C9]/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-[#3ACBE8]/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
 
@@ -109,21 +108,18 @@ function CompetitionsContent() {
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               <span className="text-white">All </span>
-              <span className="bg-gradient-to-r from-accent-400 to-accent-500 bg-clip-text text-transparent">Competitions</span>
+              <span className="bg-gradient-to-r from-[#3ACBE8] to-[#0D85D8] bg-clip-text text-transparent">Competitions</span>
             </h1>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            <p className="text-xl text-white/50 max-w-2xl mx-auto">
               Browse our exciting raffles and enter for your chance to win incredible prizes
             </p>
           </div>
         </div>
-
-        {/* Bottom gradient fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-50 to-transparent" />
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-4 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-20">
 
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <form onSubmit={handleSearch}>
@@ -132,6 +128,7 @@ function CompetitionsContent() {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   leftIcon={<Search className="w-5 h-5" />}
+                  className="bg-black/40 border-white/10 text-white placeholder:text-white/30"
                 />
               </form>
             </div>
@@ -158,8 +155,8 @@ function CompetitionsContent() {
               key={tab.value}
               onClick={() => updateFilter('status', tab.value)}
               className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${status === tab.value
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-100'
+                ? 'bg-gradient-to-r from-[#0D85D8] to-[#0041C7] text-white shadow-[0_0_12px_rgba(13,133,216,0.3)]'
+                : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
                 }`}
             >
               {tab.label}
@@ -168,7 +165,7 @@ function CompetitionsContent() {
         </div>
 
         <div className="flex items-center justify-between mb-6">
-          <p className="text-gray-600">
+          <p className="text-white/40">
             {meta && (
               <span>Showing {competitions.length} of {meta.total} competitions</span>
             )}
@@ -178,34 +175,35 @@ function CompetitionsContent() {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="relative h-48 bg-gray-200 animate-pulse" />
+              <div key={i} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                <div className="relative h-48 bg-white/5 animate-pulse" />
                 <div className="p-4">
-                  <div className="h-4 bg-gray-200 rounded w-20 mb-3 animate-pulse" />
-                  <div className="h-5 bg-gray-200 rounded w-full mb-2 animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4 animate-pulse" />
-                  <div className="h-2 bg-gray-200 rounded w-full mb-2 animate-pulse" />
+                  <div className="h-4 bg-white/10 rounded w-20 mb-3 animate-pulse" />
+                  <div className="h-5 bg-white/10 rounded w-full mb-2 animate-pulse" />
+                  <div className="h-4 bg-white/10 rounded w-3/4 mb-4 animate-pulse" />
+                  <div className="h-2 bg-white/10 rounded w-full mb-2 animate-pulse" />
                   <div className="flex justify-between mb-4">
-                    <div className="h-6 bg-gray-200 rounded w-20 animate-pulse" />
-                    <div className="h-6 bg-gray-200 rounded w-24 animate-pulse" />
+                    <div className="h-6 bg-white/10 rounded w-20 animate-pulse" />
+                    <div className="h-6 bg-white/10 rounded w-24 animate-pulse" />
                   </div>
-                  <div className="h-10 bg-gray-200 rounded w-full animate-pulse" />
+                  <div className="h-10 bg-white/10 rounded w-full animate-pulse" />
                 </div>
               </div>
             ))}
           </div>
         ) : error ? (
           <div className="text-center py-12">
-            <p className="text-red-600">Failed to load competitions. Please try again.</p>
+            <p className="text-red-400">Failed to load competitions. Please try again.</p>
             <Button onClick={() => router.refresh()} className="mt-4">
               Retry
             </Button>
           </div>
         ) : competitions.length === 0 ? (
-          <Card className="text-center py-12">
-            <p className="text-gray-600 mb-4">No competitions found matching your criteria.</p>
+          <Card className="text-center py-12 bg-white/5 border-white/10">
+            <p className="text-white/50 mb-4">No competitions found matching your criteria.</p>
             <Button
               variant="outline"
+              className="border-white/20 text-white hover:bg-white/5"
               onClick={() => {
                 router.push('/competitions');
                 setSearchInput('');
@@ -227,6 +225,7 @@ function CompetitionsContent() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="border-white/20 text-white hover:bg-white/5"
                   disabled={page === 1}
                   onClick={() => updateFilter('page', (page - 1).toString())}
                 >
@@ -240,9 +239,9 @@ function CompetitionsContent() {
                       <button
                         key={pageNum}
                         onClick={() => updateFilter('page', pageNum.toString())}
-                        className={`w-10 h-10 rounded-lg text-sm font-medium ${page === pageNum
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-white text-gray-600 hover:bg-gray-100'
+                        className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${page === pageNum
+                          ? 'bg-gradient-to-r from-[#0D85D8] to-[#0041C7] text-white'
+                          : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
                           }`}
                       >
                         {pageNum}
@@ -253,6 +252,7 @@ function CompetitionsContent() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="border-white/20 text-white hover:bg-white/5"
                   disabled={page === meta.totalPages}
                   onClick={() => updateFilter('page', (page + 1).toString())}
                 >

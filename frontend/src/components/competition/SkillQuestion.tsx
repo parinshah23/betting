@@ -57,39 +57,39 @@ export function SkillQuestion({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-neutral-200 p-6 shadow-sm">
+    <div className="bg-white/5 rounded-xl border border-white/10 p-6 backdrop-blur-sm">
       <div className="flex items-start gap-4">
-        <div className="p-3 bg-primary-50 rounded-full shrink-0">
-          <HelpCircle className="w-6 h-6 text-primary-600" />
+        <div className="p-3 bg-[#0160C9]/20 rounded-full shrink-0 border border-[#0160C9]/30">
+          <HelpCircle className="w-6 h-6 text-[#3ACBE8]" />
         </div>
-        
+
         <div className="flex-1 space-y-4">
           <div>
-            <h3 className="font-semibold text-lg text-neutral-900">Skill Question</h3>
-            <p className="text-neutral-500 text-sm mt-1">
+            <h3 className="font-semibold text-lg text-white">Skill Question</h3>
+            <p className="text-white/50 text-sm mt-1">
               Answer correctly to enter the competition.
             </p>
           </div>
 
-          <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
-            <p className="font-medium text-neutral-900 text-lg">{question}</p>
+          <div className="p-4 bg-black/30 rounded-lg border border-white/10">
+            <p className="font-medium text-white text-lg">{question}</p>
           </div>
 
           {status === 'correct' ? (
-            <div className="flex items-center gap-3 p-4 bg-green-50 text-green-700 rounded-lg border border-green-100">
+            <div className="flex items-center gap-3 p-4 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20">
               <CheckCircle2 className="w-5 h-5 shrink-0" />
               <p className="font-medium">{message}</p>
             </div>
           ) : status === 'incorrect' ? (
             <div className="space-y-3">
-               <div className="flex items-center gap-3 p-4 bg-red-50 text-red-700 rounded-lg border border-red-100">
+               <div className="flex items-center gap-3 p-4 bg-red-500/10 text-red-400 rounded-lg border border-red-500/20">
                 <XCircle className="w-5 h-5 shrink-0" />
                 <p className="font-medium">{message}</p>
               </div>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleRetry}
-                className="w-full"
+                className="w-full border-white/20 text-white hover:bg-white/10"
               >
                 Try Again
               </Button>
@@ -100,7 +100,7 @@ export function SkillQuestion({
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Enter your answer..."
-                className="flex-1"
+                className="flex-1 bg-black/30 border-white/20 text-white placeholder:text-white/30"
                 disabled={disabled || status === 'verifying'}
                 onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
               />
@@ -108,7 +108,7 @@ export function SkillQuestion({
                 onClick={handleVerify}
                 isLoading={status === 'verifying'}
                 disabled={disabled || !answer.trim()}
-                className="w-full sm:w-auto min-w-[120px]"
+                className="w-full sm:w-auto min-w-[120px] bg-gradient-to-r from-[#0D85D8] to-[#0041C7] border-0"
               >
                 Verify Answer
               </Button>

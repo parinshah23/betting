@@ -42,8 +42,8 @@ export function CompetitionCard({ competition, variant = 'default' }: Competitio
                 className="object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                <Ticket className="w-8 h-8 text-gray-400" />
+              <div className="w-full h-full bg-white/10 flex items-center justify-center">
+                <Ticket className="w-8 h-8 text-white/30" />
               </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -52,10 +52,10 @@ export function CompetitionCard({ competition, variant = 'default' }: Competitio
             </div>
           </div>
           <div className="p-3">
-            <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{title}</h3>
+            <h3 className="font-semibold text-white text-sm line-clamp-1">{title}</h3>
             <div className="flex items-center justify-between mt-2">
-              <span className="text-lg font-bold text-primary-600">£{ticketPrice}</span>
-              <span className="text-xs text-gray-500">{percentageSold}% sold</span>
+              <span className="text-lg font-bold text-[#3ACBE8]">£{ticketPrice}</span>
+              <span className="text-xs text-white/50">{percentageSold}% sold</span>
             </div>
           </div>
         </Card>
@@ -75,8 +75,8 @@ export function CompetitionCard({ competition, variant = 'default' }: Competitio
               className="object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <Ticket className="w-12 h-12 text-gray-400" />
+            <div className="w-full h-full bg-white/10 flex items-center justify-center">
+              <Ticket className="w-12 h-12 text-white/30" />
             </div>
           )}
           {competition.featured && (
@@ -101,10 +101,10 @@ export function CompetitionCard({ competition, variant = 'default' }: Competitio
           <Badge variant="default" size="sm" className="w-fit mb-2">
             {category}
           </Badge>
-          <h3 className="font-semibold text-gray-900 text-lg line-clamp-2 mb-2">
+          <h3 className="font-semibold text-white text-lg line-clamp-2 mb-2">
             {title}
           </h3>
-          <p className="text-gray-500 text-sm line-clamp-2 mb-4 flex-1">
+          <p className="text-white/50 text-sm line-clamp-2 mb-4 flex-1">
             {shortDescription}
           </p>
 
@@ -117,12 +117,12 @@ export function CompetitionCard({ competition, variant = 'default' }: Competitio
             />
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Ticket Price</p>
-                <p className="text-xl font-bold text-primary-600">£{ticketPrice}</p>
+                <p className="text-sm text-white/50">Ticket Price</p>
+                <p className="text-xl font-bold text-[#3ACBE8]">£{ticketPrice}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-500">Value</p>
-                <p className="text-lg font-semibold text-gray-900">£{prizeValue.toLocaleString()}</p>
+                <p className="text-sm text-white/50">Value</p>
+                <p className="text-lg font-semibold text-white">£{prizeValue.toLocaleString()}</p>
               </div>
             </div>
             <Button className="w-full" size="lg">
@@ -155,8 +155,8 @@ export function CompetitionGrid({ competitions, isLoading }: CompetitionGridProp
     return (
       <div className="text-center py-12">
         <Ticket className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900">No competitions available</h3>
-        <p className="text-gray-500 mt-1">Check back soon for new competitions!</p>
+        <h3 className="text-lg font-medium text-white">No competitions available</h3>
+        <p className="text-white/50 mt-1">Check back soon for new competitions!</p>
       </div>
     );
   }
@@ -172,18 +172,18 @@ export function CompetitionGrid({ competitions, isLoading }: CompetitionGridProp
 
 function CompetitionCardSkeleton() {
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div className="relative h-48 bg-gray-200 animate-pulse" />
+    <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+      <div className="relative h-48 bg-white/10 animate-pulse" />
       <div className="p-4">
-        <div className="h-4 bg-gray-200 rounded w-20 mb-3 animate-pulse" />
-        <div className="h-5 bg-gray-200 rounded w-full mb-2 animate-pulse" />
-        <div className="h-4 bg-gray-200 rounded w-3/4 mb-4 animate-pulse" />
-        <div className="h-2 bg-gray-200 rounded w-full mb-2 animate-pulse" />
+        <div className="h-4 bg-white/10 rounded w-20 mb-3 animate-pulse" />
+        <div className="h-5 bg-white/10 rounded w-full mb-2 animate-pulse" />
+        <div className="h-4 bg-white/10 rounded w-3/4 mb-4 animate-pulse" />
+        <div className="h-2 bg-white/10 rounded w-full mb-2 animate-pulse" />
         <div className="flex justify-between mb-4">
-          <div className="h-6 bg-gray-200 rounded w-20 animate-pulse" />
-          <div className="h-6 bg-gray-200 rounded w-24 animate-pulse" />
+          <div className="h-6 bg-white/10 rounded w-20 animate-pulse" />
+          <div className="h-6 bg-white/10 rounded w-24 animate-pulse" />
         </div>
-        <div className="h-10 bg-gray-200 rounded w-full animate-pulse" />
+        <div className="h-10 bg-white/10 rounded w-full animate-pulse" />
       </div>
     </div>
   );

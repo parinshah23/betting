@@ -31,67 +31,67 @@ export function CompetitionInfo({ competition }: CompetitionInfoProps) {
             </Badge>
           )}
         </div>
-        
-        <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 leading-tight">
+
+        <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
           {competition.title}
         </h1>
 
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-primary-600">
+          <span className="text-3xl font-bold text-[#3ACBE8]">
             {formatCurrency(competition.ticketPrice)}
           </span>
-          <span className="text-neutral-500 font-medium">per ticket</span>
+          <span className="text-white/50 font-medium">per ticket</span>
         </div>
       </div>
 
-      {/* Countdown & Stats */}
+      {/* Countdown */}
       {!isEnded && !isSoldOut && (
-        <div className="bg-neutral-900 rounded-xl p-4 md:p-6 text-white shadow-lg">
-          <div className="flex items-center gap-3 mb-4 text-neutral-300">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6">
+          <div className="flex items-center gap-3 mb-4 text-white/50">
             <Clock className="w-5 h-5" />
             <span className="text-sm font-medium uppercase tracking-wider">Time Remaining</span>
           </div>
-          <CountdownTimer 
-            endDate={new Date(competition.endDate)} 
+          <CountdownTimer
+            endDate={new Date(competition.endDate)}
             variant="large"
           />
         </div>
       )}
 
       {/* Progress */}
-      <div className="space-y-3 p-5 bg-neutral-50 rounded-xl border border-neutral-200">
+      <div className="space-y-3 p-5 bg-white/5 border border-white/10 rounded-xl">
         <div className="flex justify-between items-end text-sm">
-          <div className="flex items-center gap-2 font-medium text-neutral-700">
-            <Ticket className="w-4 h-4 text-primary-500" />
+          <div className="flex items-center gap-2 font-medium text-white/70">
+            <Ticket className="w-4 h-4 text-[#3ACBE8]" />
             <span>Tickets Sold</span>
           </div>
           <div className="text-right">
-            <span className="font-bold text-neutral-900">{competition.soldTickets}</span>
-            <span className="text-neutral-500"> / {competition.totalTickets}</span>
+            <span className="font-bold text-white">{competition.soldTickets}</span>
+            <span className="text-white/40"> / {competition.totalTickets}</span>
           </div>
         </div>
-        
-        <ProgressBar 
-          value={progress} 
-          variant={progress > 90 ? 'danger' : 'default'} 
+
+        <ProgressBar
+          value={progress}
+          variant={progress > 90 ? 'danger' : 'default'}
           size="md"
           animated
           showLabel
         />
 
-        <p className="text-xs text-neutral-500 text-center">
+        <p className="text-xs text-white/40 text-center">
           Guaranteed draw regardless of ticket sales!
         </p>
       </div>
 
       {/* Prize Value */}
-      <div className="flex items-center gap-4 p-4 bg-yellow-50 rounded-lg border border-yellow-100 text-yellow-800">
-        <div className="p-2 bg-yellow-100 rounded-full">
-          <Trophy className="w-6 h-6" />
+      <div className="flex items-center gap-4 p-4 bg-[#0160C9]/10 border border-[#0160C9]/20 rounded-lg">
+        <div className="p-2 bg-[#0160C9]/20 rounded-full">
+          <Trophy className="w-6 h-6 text-[#3ACBE8]" />
         </div>
         <div>
-          <p className="text-sm font-medium text-yellow-700">Total Prize Value</p>
-          <p className="text-xl font-bold">{formatCurrency(competition.prizeValue)}</p>
+          <p className="text-sm font-medium text-white/50">Total Prize Value</p>
+          <p className="text-xl font-bold text-white">{formatCurrency(competition.prizeValue)}</p>
         </div>
       </div>
     </div>

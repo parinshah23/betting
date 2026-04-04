@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 248, 250, 252;
-  --background-rgb: 0, 13, 51;
+  --foreground-rgb: 255, 255, 255;
+  --background-rgb: 0, 0, 0;
 
   /* Trendy Blue Monochromatic */
   --premium-blue: #0D85D8;
@@ -13,15 +13,15 @@
   --premium-deep: #0160C9;
   --premium-indigo: #0041C7;
   --premium-white: #ffffff;
-  --premium-dark: #000d33;
+  --premium-dark: #000000;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: #000d33;
+  background: #000000;
   background-image:
-    radial-gradient(circle at 10% 20%, rgba(13, 133, 216, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(28, 163, 222, 0.08) 0%, transparent 40%);
+    radial-gradient(circle at 10% 20%, rgba(58, 203, 232, 0.07) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(1, 96, 201, 0.07) 0%, transparent 40%);
   min-height: 100vh;
 }
 
@@ -86,7 +86,7 @@ body {
 
   /* Hero section gradient */
   .hero-gradient {
-    background: radial-gradient(circle at center, rgba(13, 133, 216, 0.15) 0%, rgba(2, 6, 23, 0) 70%);
+    background: radial-gradient(circle at center, rgba(58, 203, 232, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
   }
 
   /* CTA button gradient */
@@ -156,7 +156,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #000d33;
+  background: #000000;
 }
 
 ::-webkit-scrollbar-thumb {

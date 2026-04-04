@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import DOMPurify from 'dompurify';
 import { ChevronRight, Share2 } from 'lucide-react';
 import { CompetitionDetail } from '@/types/competition';
@@ -34,6 +34,7 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
   const { user } = useAuth();
   const { addItem } = useCart();
   const { showSuccess, showError } = useToast();
+  const router = useRouter();
 
   const [skillAnswer, setSkillAnswer] = useState<string | null>(null);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -68,15 +69,20 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
     setSkillAnswer(answer);
   };
 
-  const handleAddToCart = async (quantity: number) => {
+  const handleAddToCart = async (quantity: number, _ticketNumbers?: number[]) => {
     if (!user) {
       showError('Please login to purchase tickets');
-      // Redirect to login logic could go here, or just show toast
+      router.push('/login');
       return;
     }
 
     if (!skillAnswer) {
       showError('Please answer the skill question correctly');
+      return;
+    }
+
+    if (quantity < 1) {
+      showError('Please select at least one ticket number');
       return;
     }
 
@@ -102,12 +108,12 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
   return (
     <div className="container mx-auto px-4 py-6 md:py-10">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-neutral-500 mb-6 overflow-x-auto whitespace-nowrap">
-        <Link href="/" className="hover:text-primary-600">Home</Link>
+      <nav className="flex items-center gap-2 text-sm text-white/40 mb-6 overflow-x-auto whitespace-nowrap">
+        <Link href="/" className="hover:text-[#3ACBE8] transition-colors">Home</Link>
         <ChevronRight className="w-4 h-4" />
-        <Link href="/competitions" className="hover:text-primary-600">Competitions</Link>
+        <Link href="/competitions" className="hover:text-[#3ACBE8] transition-colors">Competitions</Link>
         <ChevronRight className="w-4 h-4" />
-        <span className="text-neutral-900 font-medium truncate max-w-[200px]">{normalizedCompetition.title}</span>
+        <span className="text-white font-medium truncate max-w-[200px]">{normalizedCompetition.title}</span>
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
@@ -117,9 +123,9 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
 
           {/* Description - Mobile: Show after info, Desktop: Show here */}
           <div className="hidden lg:block space-y-6">
-            <h2 className="text-2xl font-bold text-neutral-900">Prize Details</h2>
-            <div 
-              className="prose prose-neutral max-w-none text-neutral-600"
+            <h2 className="text-2xl font-bold text-white">Prize Details</h2>
+            <div
+              className="prose prose-invert max-w-none text-white/60"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(normalizedCompetition.description) }}
             />
           </div>
@@ -143,8 +149,11 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
               {/* Ticket Selector */}
               <div className={!skillAnswer ? "opacity-50 pointer-events-none grayscale transition-all" : "transition-all"}>
                 <TicketSelector
+                  competitionId={normalizedCompetition.id}
                   ticketPrice={normalizedCompetition.ticketPrice}
-                  maxQuantity={Math.min(normalizedCompetition.maxTicketsPerUser, remainingTickets)}
+                  maxQuantity={normalizedCompetition.maxTicketsPerUser > 0
+                    ? Math.min(normalizedCompetition.maxTicketsPerUser, remainingTickets)
+                    : remainingTickets}
                   onAddToCart={handleAddToCart}
                   isLoading={isAddingToCart}
                   disabled={!skillAnswer}
@@ -152,50 +161,50 @@ export default function CompetitionClient({ initialData, slug }: CompetitionClie
               </div>
             </div>
           ) : (
-            <div className="bg-neutral-100 rounded-xl p-8 text-center border border-neutral-200">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
               {isSoldOut ? (
                 <>
-                  <h3 className="text-2xl font-bold text-neutral-900 mb-2">Sold Out!</h3>
-                  <p className="text-neutral-600">
-                    All tickets for this competition have been sold. 
+                  <h3 className="text-2xl font-bold text-white mb-2">Sold Out!</h3>
+                  <p className="text-white/50">
+                    All tickets for this competition have been sold.
                     The draw will take place on {new Date(competition.drawDate || competition.endDate).toLocaleDateString()}.
                   </p>
                 </>
               ) : (
-                 <>
-                  <h3 className="text-2xl font-bold text-neutral-900 mb-2">Competition Ended</h3>
-                  <p className="text-neutral-600">
-                    This competition has ended. 
+                <>
+                  <h3 className="text-2xl font-bold text-white mb-2">Competition Ended</h3>
+                  <p className="text-white/50">
+                    This competition has ended.
                     {competition.winner && (
-                      <span className="block mt-2 font-medium text-primary-600">
+                      <span className="block mt-2 font-medium text-[#3ACBE8]">
                         Winner: {competition.winner.displayName} (Ticket #{competition.winner.ticketNumber})
                       </span>
                     )}
                   </p>
                 </>
               )}
-               <Button href="/competitions" variant="outline" className="mt-6 w-full">
+              <Button href="/competitions" variant="outline" className="mt-6 w-full border-white/20 text-white hover:bg-white/5">
                 View Other Competitions
               </Button>
             </div>
           )}
 
-           {/* Mobile Description */}
-           <div className="lg:hidden space-y-6 pt-6 border-t border-neutral-100">
-            <h2 className="text-2xl font-bold text-neutral-900">Prize Details</h2>
-            <div 
-              className="prose prose-neutral max-w-none text-neutral-600"
+          {/* Mobile Description */}
+          <div className="lg:hidden space-y-6 pt-6 border-t border-white/10">
+            <h2 className="text-2xl font-bold text-white">Prize Details</h2>
+            <div
+              className="prose prose-invert max-w-none text-white/60"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(competition.description) }}
             />
           </div>
-          
-           {/* Share */}
-           <div className="flex justify-center">
-            <button className="flex items-center gap-2 text-sm text-neutral-500 hover:text-primary-600 transition-colors">
+
+          {/* Share */}
+          <div className="flex justify-center">
+            <button className="flex items-center gap-2 text-sm text-white/40 hover:text-[#3ACBE8] transition-colors">
               <Share2 className="w-4 h-4" />
               Share this competition
             </button>
-           </div>
+          </div>
         </div>
       </div>
     </div>
