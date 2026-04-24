@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 
 export function Footer() {
@@ -35,9 +36,13 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0D85D8] to-[#0041C7] flex items-center justify-center shadow-[0_0_12px_rgba(13,133,216,0.3)]">
-                <span className="text-white font-bold text-xl">PC</span>
-              </div>
+              <Image
+                src="/images/Logo-removebg-preview.png"
+                alt="Premium Competitions Logo"
+                width={500}
+                height={128}
+                className="h-32 w-auto object-contain drop-shadow-[0_0_12px_rgba(13,133,216,0.2)]"
+              />
               <div className="flex flex-col leading-tight">
                 <span className="text-xl font-bold text-white">Premium</span>
                 <span className="text-sm font-semibold text-[#3ACBE8]">Competitions</span>
